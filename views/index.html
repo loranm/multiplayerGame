@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>Capitals Quizz</title>
+
+
+
+
+        <link rel="stylesheet" href="../public/stylesheets/game.css">
+
+
+
+
+  </head>
+
+<body>
+
+  <div id="home">
+  	<div id="holderofHolder">
+      <div class="login_field">
+        <input type="text" name="login" placeholder="Choose a username to play">
+      </div>
+  		<div id="holderOfStart">
+  			<div class="start">Start</div>
+  		</div>
+  	</div>
+  </div>
+
+  <div id="game">
+    <h6 style="display:none;"></h6>
+    <div id="score" class="gamedivs">
+    	<div id="passHolder"><div class="buttonScore" id="pass">Pass</div></div>
+        <div class="buttonScore" id="time">Pass</div>
+        <div id="username">
+          <input type="text" value="YOUR USERNAME"></input>
+        </div>
+    </div>
+
+    <div id="header" class="gamedivs">
+    <div class="theCountry"></div>
+    <img alt="country">
+    </div>
+
+    <div id="pholder" class="gamedivs">
+    	<div id="ppholder">
+    	</div>
+    </div>
+
+    <div id="buttholder" class="gamedivs">
+    	<div id="butttholder">
+        </div>
+    </div>
+  </div>
+
+<div id="end">
+
+  <div class="results">
+
+  <div id="wrong"></div>
+  <hr>
+  <div class="hidd" id="fautes"></div>
+
+  </div>
+  <!-- end of wrong -->
+  <br>
+  <!--start of right -->
+  <div class="results">
+
+  <div id="correct"></div>
+  <!-- end of right -->
+  <div id="accuracy"></div>
+</div>
+
+<div id="startagain">Start Again</div>
+</div>
+
+<script src="..public/javascripts/jquery.min.js"></script>
+<script src="../public/javascripts/game.js"></script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,14 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    title
+  body
+    input#bouton(type='button', name='name', value='Créer un socket')
+    script(type='text/javascript' src="/socket.io/socket.io.js")
+    script(type='text/javascript').
+      var socket = io();
+      
+      socket.on('welcome',function(data){
+        console.log(data.message)
+      })
