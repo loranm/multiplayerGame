@@ -5,6 +5,7 @@ html
     title Capitals Quizz
     link(rel='stylesheet', href='../stylesheets/game.css')
   body
+
     #home
       #holderofHolder
         .login_field
@@ -12,29 +13,13 @@ html
         #holderOfStart
           .start Start
     #game
-      h6(style='display:block;')
+      h6(style='display:none;')
       #score.gamedivs
         #passHolder
           #pass.buttonScore Pass
         #time.buttonScore Pass
-      #connectedPlayers.gamedivs
-        table#scoreBoard
-          thead
-            tr
-              th
-                | Joueur
-              th
-                | Score actuel
-              th
-                | Meilleur Score
-          tbody
-            //- tr
-            //-   td
-            //-     | toto
-            //-   td
-            //-     | 12
-            //-   td
-            //-     | 200
+      #username
+        input(type='text', name='username', value='' )
       #header.gamedivs
         .theCountry
         img(alt='country')
@@ -55,6 +40,6 @@ html
         // end of right
         #accuracy
       #startagain Start Again
-    script(src='https://code.jquery.com/jquery-2.2.4.min.js')
+    script(src='../javascripts/jquery.min.js')
     script(src='../javascripts/game.js')
     script(src='/socket.io/socket.io.js')

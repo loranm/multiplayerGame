@@ -7,6 +7,8 @@
 var app = require('../app');
 var debug = require('debug')('multiplayerGame:server');
 var http = require('http');
+var db = require('./db.js')
+
 
 /**
  * Get port from environment and store in Express.
@@ -26,9 +28,18 @@ app.io.attach(server);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+ db.connect('mongodb://localhost:27017/game', function(err) {
+   if (err) {
+     console.log('Impossible de se connecter à la base de données.');
+     process.exit(1);
+   } else {
+     server.listen(port);
+     server.on('error', onError);
+     server.on('listening', onListening);
+       console.log('Le serveur est disponible sur le port 8080');
+     };
+});
+
 
 /**
  * Normalize a port into a number, string, or false.
@@ -92,7 +103,7 @@ function onListening() {
 
 
 app.io.on('connection', function(socket){
-  console.log('a user connected');
+  console.log(socket.id);
 });
 
-module.exports = app; 
+module.exports = app;

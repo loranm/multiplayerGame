@@ -1,12 +1,10 @@
-	/*
+	/*  
 	the capitals quizz
 	Design and Code by Boudjema Abdennour
 	facebook.com/nouri.karita.dz
 	*/
 // JavaScript Document
-
 $(document).ready(function(){
-  console.log('javascript chargé')
     "use strict";
 	$("#game").hide();
 	$("#end").hide();
@@ -44,10 +42,6 @@ $(document).ready(function(){
 		splitersHolder=[];
 		counter=0;
 	}
-  var socket = io();
-  console.log(socket);
-
-  //function qui remet tous les indicateur à zero -
 	function resetEverything(){
 		$("#end").hide();
 		$("#game").hide();
@@ -65,26 +59,21 @@ $(document).ready(function(){
 	    correct=[];
 		accuracy=0;
 	}
-
-//function qui générèe un nombre aléatoire pour choisir dans le tableau country.
 	function generateNumber(){
 			randomNumberMainOption=Math.floor(Math.random()*countries.length);
 			var checkAvailability=alreadyPlayed.indexOf(randomNumberMainOption);
 			if(checkAvailability===-1){
 					alreadyPlayed.push(randomNumberMainOption);
 					//console.log(randomNumberMainOption);
-
+					
 				}
 			else{
 					randomNumberMainOption=Math.floor(Math.random()*countries.length);
 					console.log(randomNumberMainOption);
 				}
-
+			
 			//console.log("array : "+alreadyPlayed+" the number : "+randomNumberMainOption);
 		}//generate random Number and check if not used already
-
-
-
 	function getTheAnswerAndBreakIt(){
 		//console.log(randomNumberMainOption);
 			theAnswer=capitals[randomNumberMainOption];
@@ -101,7 +90,7 @@ $(document).ready(function(){
 		}
 		function distributeLetters(){
 			for(var k=0;k<1000;k++){
-
+				
 				var randomNumberToSplitLetters=Math.floor(Math.random()*howmanyButtons);
 				var splitersAvailabilityChecker=splitersHolder.indexOf(randomNumberToSplitLetters);
 					if(splitersAvailabilityChecker===-1){
@@ -116,9 +105,9 @@ $(document).ready(function(){
 					}
 			}//for
 		}//distribute letters on buttons , the right ones
-
+		
 	var letters=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
-
+	
 	function fillTheRemainingButtons(){
 		for(var x=0;x<1000;x++){
 				var randomLetterSelecter=Math.floor(Math.random()*letters.length);
@@ -149,8 +138,8 @@ $(document).ready(function(){
 			}
 		//console.log(theAnswerDivided.length);
 	}//generate paragraphs that'll hold the letters
-
-
+	
+	
 	function checkNextAppend(){
 		for(var j=0;j<theAnswerDivided.length;j++){
 			var text=$("#"+j+"").text();
@@ -165,7 +154,7 @@ $(document).ready(function(){
 			}//for
 		}//check next append
 	$("#butttholder").on("click", ".button", function(){
-    checkNextAppend();
+		checkNextAppend();
 		if(nextAppend>-1){
 			var texts = $(this).text();
             $("#"+nextAppend+"").text(texts);
@@ -175,8 +164,6 @@ $(document).ready(function(){
 		}//if still places
 		//console.log(counter);
 	});//on cilick button
-
-
 	function checkIfWin(){
 		$("h6").text("");
 		for(var d=0;d<theAnswerDivided.length;d++){
@@ -217,67 +204,8 @@ $(document).ready(function(){
 		$("#game").show();
 		$("#end").hide();
         game();
-        createPlayer();
-		    Timer();
+		Timer();
     });//start the game
-
-
-  var createPlayer = function(){
-    var newUser = document.getElementById('userName').value;
-    socket.emit('new player', newUser);
-  }
-
-//créer le tableau des participants pour le nouveau connecté
-  socket.on('createMyNewScoreBoard', function(data){
-    addToPlayersBoard(data.players)
-  });
-
-
-//ajouter le nouveau participants au tableau des connecté
-  socket.on('addNewPlayerToBoard', function(data){
-    addToPlayersBoard(data);
-  });
-
-  socket.on('leftTheGame', function(data){
-    deletePlayerFromBoard(data.user.user);
-  });
-
-
-  var addToPlayersBoard = function(data){
-    // var cap = document.getElementById('playerslist');
-    var connectedPlayers = document.getElementById('scoreBoard');
-    for (i in data){
-      var newRowPlayer = connectedPlayers.insertRow(connectedPlayers.rows.length);
-      var newCellUser = newRowPlayer.insertCell(0);
-      var newCellScore = newRowPlayer.insertCell(1);
-      var newCellBestScore = newRowPlayer.insertCell(2);
-
-      var newTextPlayer = document.createTextNode(data[i].user);
-      var newTextScore = document.createTextNode(0);
-      var newTextBestScore = document.createTextNode(data[i].bestScore);
-
-      newCellUser.appendChild(newTextPlayer);
-      newCellScore.appendChild(newTextScore);
-      newCellBestScore.appendChild(newTextBestScore);
-
-    };
-  };
-
-  var deletePlayerFromBoard = function(playerId){
-    var connectedPlayers = document.getElementById('scoreBoard');
-    var rowCount = connectedPlayers.rows.length;
-    var row = connectedPlayers.rows[1]
-    for (var i = rowCount-1 ; i > -1; i--){
-      var row = connectedPlayers.rows[i];
-      var username = row.cells[0].innerText;
-      if (username.indexOf(playerId) != -1){
-        connectedPlayers.deleteRow(i);
-      };
-    };
-  };
-
-
-
 	function Timer(){
 			var gameTime=setInterval(function(){
 				miliseconds++;
@@ -286,7 +214,7 @@ $(document).ready(function(){
 					seconds++;
 				}
 				$("#time").text("time left : "+(180-seconds));
-
+				
 				//console.log("seconds : "+seconds+" interv : "+interv);
 				if(seconds>=limit){
 					clearInterval(gameTime);
@@ -324,18 +252,13 @@ $(document).ready(function(){
 				var lesFautes=mistake[f];
 				$("#fautes").append(countries[lesFautes]+" : "+capitals[lesFautes]+"<br>");
 			}//write the mistakes
-
-
+			
+			
 			/*for(var r=0;r<correct.length;r++){
 				var lesJustes=correct[r];
 				$("#justes").append(countries[lesJustes]+" : "+capitals[lesJustes]+"<br>");
 			}*///write the rights
 			//console.log(miliseconds);
 	}//endgame funciotn
-
-  window.addEventListener('beforeunload', function(){
-    socket.emit('disconnect');
-  });
-
-
+		
 });

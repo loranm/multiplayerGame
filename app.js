@@ -13,7 +13,14 @@ var chat = require('./routes/chat');
 
 var db = require('./bin/db.js')
 
-
+var players = {};
+var player = function(options){
+  this.user = options.user;
+  this.mail = options.mail;
+  this.bestScore = options.bestScore;
+  this.askedCountries = {};
+  this.guessedCountries = {};
+};
 
 var app = express();
 app.io = require('socket.io')();
@@ -68,57 +75,49 @@ app.use(function(err, req, res, next) {
   });
 });
 
-/******************************************************************************
-CONNEXION A MONGO
-******************************************************************************/
-db.connect('mongodb://localhost:27017/game', function(err){
-  if(err){
-    console.log('connexion à la base de données impossible');
-  }else{
-    console.log('connexion à mongodb effectuée')
-  }
-});
-
-
-
-
 /*******************************************************************************
 GESTION du WEBSOCKET
 ******************************************************************************/
-app.io.on('connection', function(socket){
-  console.log('a user connected');
+app.io.on('connection', function(socket){ //connexion initiale au websocket
   socket.emit('welcome', {message:'bienvenue'});
-
-    socket.on('new message', function(msg){
-      console.log("new mess = " + msg);
-      app.io.emit('chat message', msg)
-    });
 
 
     socket.on('new player', function(user){
-      console.log(user)
       var collection =  db.get().collection('players');
       collection.find({'user':user}).toArray(function(err,data){
+        console.log('data =' + data.length)
         if(err){
-          console.log('impossible de trouver : ' + data);
+          throw err;
         }else{
           if(data.length > 0){
-            socket.emit('ok_player', {user: data[0].user, score: data[0].bestScore})
+            players[socket.id] = new player({user:data[0].user, mail:data[0].mail, bestScore:data[0].bestScore})
+              var newPlayer = players[socket.id];
+              socket.emit('createMyNewScoreBoard',{players});
+              socket.broadcast.emit('addNewPlayerToBoard', {newPlayer});
+              //ajouter la connexion avec un mot de passe
           }else{
-            collection.insert({'user':user,'mail':'tbd','pwd':'tbd','bestScore':0},function(err, result){
-              if(err){
-                console.log('impossible de créer user');
-              }else{
-                collection.find({'user':user}).toArray(function(err,data){
-                  console.log('new user : ' + data[0].user);
-                });
-              };
-            });
+            players[socket.id] = new player({user:user, bestScore:0})
+            var newPlayer = players[socket.id];
+            socket.broadcast.emit('addNewPlayerToBoard', {newPlayer});
+            socket.emit('createMyNewScoreBoard',{players});
           };
         };
       });
     });
+
+
+/*****************************************************************************
+GESTION DE LA DECONNEXION DU JOUEUR
+*****************************************************************************/
+    socket.on('disconnect', function(data){
+      socket.broadcast.emit('leftTheGame', {message:'parti', user: players[socket.id]});
+      delete players[socket.id];
+
+      //ajouter la proposition de créer un compte pour sauvegarder son score.
+    })
   });
+
+
 
 
 
