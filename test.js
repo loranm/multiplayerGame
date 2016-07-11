@@ -12,10 +12,9 @@ var game = require('./routes/game_router');
 var test = require('./routes/test');
 var chat = require('./routes/chat');
 var db = require('./bin/db.js')
+// var pickFlag = require('./bin/game_mechanic.js')
 
 
-
-// var players = {12345: {user:'test',mail:'toto@gmail.com',bestScore:2000,askedCountries:['FRANCE'],guessedCountries:[],countryToGuess:''}};
 
 var players = {};
 var player = function(options) {
@@ -135,43 +134,14 @@ app.io.on('connection', function(socket) { //connexion initiale au websocket
     /******************************************************************************
     MECANIQUE DU JEU
     *******************************************************************************/
-    socket.on('Send me a new flag', function(){
-      var doNotSendTheseCountries = [];
-      db.connect('mongodb://localhost:27017/game', function(err) {
-        if (err) {
-          console.log('Impossible de se connecter à la base de données.');
-          process.exit(1);
-        } else {
-          for (var i in players) {
-            if (i === socket.id) {
-              console.log('id trouvé')
-              doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].askedCountries);
-              doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].guessedCountries);
-              var collection = db.get().collection('countries')
-              collection.find({'country': {$nin: doNotSendTheseCountries}}).toArray(function(err, data) {
-                if (err) {
-                  console.log('ERREUR')
-                } else {
-                  var max = (data.length);
-                  var sendFlagNb = randInt(0, max);
-                  console.log(chalk.blue(sendFlagNb))
-                  players[socket.id].countryToGuess = data[sendFlagNb].country;
-                  var flagToSend = players[socket.id].countryToGuess
-                  var additionnalLetters = 16-data[sendFlagNb].capital.length;
-                  console.log(additionnalLetters)
-                  for (var i = 0; i < additionnalLetters ; i++){
-
-                  }
-                  socket.emit('newFlag', {message:'new Flag', country:flagToSend, flag:data[sendFlagNb].flag, capitalsize:data[sendFlagNb].capital.length, capital:data[sendFlagNb].capital})
-                };
-              });
-            }else{
-              console.log('impossible de trouver cet id');
-            };
-          };
-        };
-      });
+    socket.on('Send me a new flag', function (data){
+      var test = pickACountry(socket.id, players);
+      console.log(test)
     });
+
+    var maFonction = function(data, callback){
+      console.log(data);
+    }
 
     /*****************************************************************************
     GESTION DE LA DECONNEXION DU JOUEUR
@@ -197,5 +167,43 @@ TIRAGE AU SORT PAYS
 var randInt = function(min, max) {
     return Math.floor(Math.random() * max) + min
 };
+var pickACountry = function(id, players) {
+    var doNotSendTheseCountries = [];
+    db.connect('mongodb://localhost:27017/game', function(err) {
+        if (err) {
+            console.log('Impossible de se connecter à la base de données.');
+            process.exit(1);
+        } else {
+            for (var i in players) {
+                if (i == id) {
+                    doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].askedCountries);
+                    doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].guessedCountries);
+                    var collection = db.get().collection('countries')
+                    var myCursor = collection.find({'country': {$nin: doNotSendTheseCountries}}).toArray(function(err, data) {
+                        if (err) {
+                            console.log('ERREUR')
+                        } else {
+                            var max = (data.length);
+                            var sendFlagNb = randInt(0, max);
+                            players[i].countryToGuess = data[sendFlagNb].country;
+                            return players[i].countryToGuess;
+                        };
+                    });
+                };
+            };
+        };
+    });
+};
+
+
+
+
+var maFonction = function(callback,data,id){
+  var test = callback(id,data);
+  console.log(test);
+}
+
+maFonction(pickACountry,players,1)
+
 
 module.exports = app;

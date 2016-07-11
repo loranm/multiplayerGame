@@ -102,8 +102,8 @@ function onListening() {
 }
 
 
-app.io.on('connection', function(socket){
-  console.log(socket.id);
-});
+// app.io.on('connection', function(socket){
+//   console.log(socket.id);
+// });
 
 module.exports = app;
