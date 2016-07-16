@@ -10,39 +10,20 @@ $(document).ready(function(){
 	$("#game").hide();
 	$("#end").hide();
 	$("#home").show();
-  var letters=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
-	// var countries=["ALBANIA","ARMENIA","AUSTRIA","AZERIBAIJAN","BELARUS","BELGIUM","BOSNIA AND HERZEGOVINA","BULGARIA","CROATIA","CYPRUS","CZECH REPUBLIC","DENMARK","ESTONIA","FINLAND","FRANCE","GEORGIA","GERMANY","GREECE","HUNGARY","ICELAND","IRELAND","ITALY","KAZAKHSTAN","LATVIA","LIECHTENSTEIN","LITHUANIA","LUXEMBOURG","MACEDONIA","MALTA","MOLDOVA","MONACO","MONTENEGRO","NETHERLANDS","NORWAY","POLAND","PORTUGAL","ROMANIA","RUSSIA","SAN MARINO","SERBIA","SLOVAKIA","SLOVENIA","SPAIN","SWEDEN","SWITZERLAND","TURKEY","UKRAINE","UNITED KINGDOM"];
-	// var capitals=["TIRANA","YEREVAN","VIENNA","BAKU","MINSK","BRUSSELS","SARAJEVO","SOFIA","ZAGREB","NICOSIA","PRAGUE","COPENHAGEN","TALLINN","HELSINKI","PARIS","TBILISI","BERLIN","ATHENS","BUDAPEST","REYKJAVIK","DUBLIN","ROME","ASTANA","RIGA","VADUZ","VILNIUS","LUXEMBOURG","SKOPJE","VALLETTA","CHISINAU","MONACO","PODGORICA","AMSTERDAM","OSLO","WARSAW","LISBON","BUCHAREST","MOSCOW","SAN MARINO","BELGRADE","BRATISLAVA","LJUBLJANA","MADRID","STOCKHOLM","BERN","ANKARA","KYIV","LONDON"];
-	// var flags=["https://upload.wikimedia.org/wikipedia/commons/3/36/Flag_of_Albania.svg","https://upload.wikimedia.org/wikipedia/commons/2/2f/Flag_of_Armenia.svg","https://upload.wikimedia.org/wikipedia/commons/4/41/Flag_of_Austria.svg","https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Azerbaijan.svg","https://upload.wikimedia.org/wikipedia/commons/8/85/Flag_of_Belarus.svg","https://upload.wikimedia.org/wikipedia/commons/6/65/Flag_of_Belgium.svg","https://upload.wikimedia.org/wikipedia/commons/b/bf/Flag_of_Bosnia_and_Herzegovina.svg","https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Bulgaria.svg","https://upload.wikimedia.org/wikipedia/commons/1/1b/Flag_of_Croatia.svg","https://upload.wikimedia.org/wikipedia/commons/d/d4/Flag_of_Cyprus.svg","https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_the_Czech_Republic.svg","https://upload.wikimedia.org/wikipedia/commons/9/9c/Flag_of_Denmark.svg","https://upload.wikimedia.org/wikipedia/commons/8/8f/Flag_of_Estonia.svg","https://upload.wikimedia.org/wikipedia/commons/b/bc/Flag_of_Finland.svg","https://upload.wikimedia.org/wikipedia/en/c/c3/Flag_of_France.svg","https://upload.wikimedia.org/wikipedia/commons/0/0f/Flag_of_Georgia.svg","https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg","https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Greece.svg","https://upload.wikimedia.org/wikipedia/commons/c/c1/Flag_of_Hungary.svg","https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Iceland.svg","https://upload.wikimedia.org/wikipedia/commons/4/45/Flag_of_Ireland.svg","https://upload.wikimedia.org/wikipedia/en/0/03/Flag_of_Italy.svg","https://upload.wikimedia.org/wikipedia/commons/d/d3/Flag_of_Kazakhstan.svg","https://upload.wikimedia.org/wikipedia/commons/8/84/Flag_of_Latvia.svg","https://upload.wikimedia.org/wikipedia/commons/4/47/Flag_of_Liechtenstein.svg","https://upload.wikimedia.org/wikipedia/commons/1/11/Flag_of_Lithuania.svg","https://upload.wikimedia.org/wikipedia/commons/d/da/Flag_of_Luxembourg.svg","https://upload.wikimedia.org/wikipedia/commons/f/f8/Flag_of_Macedonia.svg","https://upload.wikimedia.org/wikipedia/commons/7/73/Flag_of_Malta.svg","https://upload.wikimedia.org/wikipedia/commons/2/27/Flag_of_Moldova.svg","https://upload.wikimedia.org/wikipedia/commons/e/ea/Flag_of_Monaco.svg","https://upload.wikimedia.org/wikipedia/commons/6/64/Flag_of_Montenegro.svg","https://upload.wikimedia.org/wikipedia/commons/2/20/Flag_of_the_Netherlands.svg","https://upload.wikimedia.org/wikipedia/commons/d/d9/Flag_of_Norway.svg","https://upload.wikimedia.org/wikipedia/en/1/12/Flag_of_Poland.svg","https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Portugal.svg","https://upload.wikimedia.org/wikipedia/commons/7/73/Flag_of_Romania.svg","https://upload.wikimedia.org/wikipedia/en/f/f3/Flag_of_Russia.svg","https://upload.wikimedia.org/wikipedia/commons/b/b1/Flag_of_San_Marino.svg","https://upload.wikimedia.org/wikipedia/commons/f/ff/Flag_of_Serbia.svg","https://upload.wikimedia.org/wikipedia/commons/e/e6/Flag_of_Slovakia.svg","https://upload.wikimedia.org/wikipedia/commons/f/f0/Flag_of_Slovenia.svg","https://upload.wikimedia.org/wikipedia/en/9/9a/Flag_of_Spain.svg","https://upload.wikimedia.org/wikipedia/en/4/4c/Flag_of_Sweden.svg","https://upload.wikimedia.org/wikipedia/commons/f/f3/Flag_of_Switzerland.svg","https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg","https://upload.wikimedia.org/wikipedia/commons/4/49/Flag_of_Ukraine.svg","https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"];
-  // var currentFlag;
+  var capitalSize;
+  var myAnswer='';
   var theLetterWanted=-1;
 	var remainingButtons=0;
 	var alreadyPlayed=[];
 	var theAnswerDivided=[];
 	var randomNumberMainOption;
-	// var theAnswerLength;
-	var theAnswer;
-	var slicer;
-	var splitersHolder=[];
+  var proposition = [];
+  var myCounter = 0;
 	var nextAppend;
 	var counter=1;
-	// var howmanyButtons=16;
-	var playedAlreadies=0;
-	var rights=0;
-	var wrongs=0;
-	var passes=0;
-	var seconds=0;
-	var miliseconds=0;
-	var mistake=[];
-	var correct=[];
-	var interv=1;
-	var limit=180;
-	var accuracy=0;
-	function resetAll(){
+	var resetAll = function(){
 		theLetterWanted=-1;
 		remainingButtons=0;
-		// theAnswerDivided=[];
-		splitersHolder=[];
 		counter=0;
 	}
   var socket = io();
@@ -55,115 +36,41 @@ $(document).ready(function(){
 		$("#fautes").empty();
 		$("#justes").empty();
 		resetall();
-		playedAlreadies=0;
-		rights=0;
-		wrongs=0;
-		passes=0;
-		seconds=0;
-		miliseconds=0;
-		mistake=[];
-	    correct=[];
-		accuracy=0;
-	}
+    timer(180);
 
-//function qui générèe un nombre aléatoire pour choisir dans le tableau country.
-	// function generateNumber(){
-	// 		randomNumberMainOption=Math.floor(Math.random()*countries.length);
-	// 		var checkAvailability=alreadyPlayed.indexOf(randomNumberMainOption);
-	// 		if(checkAvailability===-1){
-	// 				alreadyPlayed.push(randomNumberMainOption);
-	// 				//console.log(randomNumberMainOption);
-  //
-	// 			}
-	// 		else{
-	// 				randomNumberMainOption=Math.floor(Math.random()*countries.length);
-	// 				// console.log(randomNumberMainOption);
-	// 			}
-  //
-	// 		//console.log("array : "+alreadyPlayed+" the number : "+randomNumberMainOption);
-	// 	}//generate random Number and check if not used already
+		// rights=0;
+		// wrongs=0;
+		// passes=0;
+		// seconds=0;
+		// miliseconds=0;
+		// mistake=[];
+	    // correct=[];
+		// accuracy=0;
+	};
 
-
-
-	// function getTheAnswerAndBreakIt(){
-  //   console.log(theAnswer.length);
-  //   // theAnswerLength=theAnswer.length;
-  //   for(var i=0;i < theAnswer.length;i++){
-  //     slicer=theAnswer.slice(i,i+1);
-  //     theAnswerDivided.push(slicer);
-  //     console.log("the Answer : " + theAnswer);
-  //   }
-  // }
-
-  //get answer and break it;
-		//console.log(randomNumberMainOption);
-			// theAnswer = answer;
-			// theAnswer=capitals[randomNumberMainOption];
-			// $(".theCountry").text(countries[randomNumberMainOption]);
-
-	function changeCountry(country,flag){
+	var changeCountry = function(country,flag){
     $(".theCountry").text(country);
 		$("img").attr("src",flag);
 	};
 
-	function distributeLetters(nb){
-		for(var k=0;k<1000;k++){
-			var randomNumberToSplitLetters=Math.floor(Math.random()*nb);
-			var splitersAvailabilityChecker=splitersHolder.indexOf(randomNumberToSplitLetters);
-				if(splitersAvailabilityChecker===-1){
-						theLetterWanted++;
-						splitersHolder.push(randomNumberToSplitLetters);
-						//console.log("randoms : "+splitersHolder+" k : "+k+" the letter : "+theLetterWanted);
-						// $("."+randomNumberToSplitLetters+"").text(theAnswerDivided[theLetterWanted]);
-							if(splitersHolder.length>=theAnswerDivided.length){break;}
-				}
-				else{
-						randomNumberToSplitLetters=Math.floor(Math.random()*theAnswerDivided.length);
-				}
-		}//for
-	}//distribute letters on buttons , the right ones
-
-	function fillTheRemainingButtons(nb){
-		for(var x=0;x<1000;x++){
-				var randomLetterSelecter=Math.floor(Math.random()*letters.length);
-				var randomOtherButtonsSelector=Math.floor(Math.random()*nb);
-				var indexOfOtherRandom=splitersHolder.indexOf(randomOtherButtonsSelector);
-					if(indexOfOtherRandom===-1){
-							splitersHolder.push(randomOtherButtonsSelector);
-							remainingButtons++;
-							$("."+randomOtherButtonsSelector+"").text(letters[randomLetterSelecter]);
-							/*console.log("buttons : "+howmanyButtons);
-							console.log(" filled already : "+splitersHolder.length+"counter : "+remainingButtons);*/
-							//console.log("the random : "+randomOtherButtonsSelector);
-								if(remainingButtons>nb-theLetterWanted){break;}
-						}
-					else{
-							randomOtherButtonsSelector=Math.floor(Math.random()*nb);
-						}
-			}//for
-		}//fill the remaining buttons
-
-	function genButtons(nb){
+	var genButtons = function(nb){
 		for(var k=0;k<nb;k++){
 			$("#butttholder").append("<div class='"+k+" button'></div>");
 			}
 	}//generate buttons
 
 	function genPs(nb){
-    console.log('genPs' + theAnswer);
 		for(var i=0; i < nb; i++){
 			$("#ppholder").append("<div id='"+i+"' class='p'></div>");
 			}
-		//console.log(theAnswerDivided.length);
 	}//generate paragraphs that'll hold the letters
 
 
 	function checkNextAppend(){
-		for(var j=0;j<theAnswerDivided.length;j++){
+		for(var j=0;j<capitalSize;j++){
 			var text=$("#"+j+"").text();
 			if(!text){
 				nextAppend=j;
-				//console.log("next append : "+nextAppend);
 				break;
 				}//if
 			else{
@@ -171,62 +78,49 @@ $(document).ready(function(){
 			    }//else
 			}//for
 		}//check next append
+
 	$("#butttholder").on("click", ".button", function(){
-    checkNextAppend();
-		if(nextAppend>-1){
-			var texts = $(this).text();
-            $("#"+nextAppend+"").text(texts);
-		    $(this).remove();
-			counter++;
-			checkIfWin();
-		}//if still places
-		//console.log(counter);
-	});//on cilick button
+    var slots = document.getElementsByClassName('p');
+    $(slots[myCounter]).text($(this).text());
+    myAnswer += $(this).text();
+    myCounter++;
+    $(this).remove();
+    if (myCounter >= capitalSize){
+      checkIfWin(myAnswer);
+      myCounter = 0;
+      myAnswer = '';
+    };
+  });
 
 
-	function checkIfWin(){
-		$("h6").text("");
-		for(var d=0;d<theAnswerDivided.length;d++){
-			$("h6").append($("#"+d+"").text());
-		}//for
-		if(counter>=theAnswerLength){
-				playedAlreadies++;
-				if($("h6").text()===theAnswer){
-					game();
-					rights++;
-					correct.push(randomNumberMainOption);
-				}//if win
-				else{
-					game();
-					wrongs++;
-					mistake.push(randomNumberMainOption);
-				}///else lose
-			}//if all filed
-			//console.log("counter : "+counter+" answer length : "+theAnswerLength);
+
+	function checkIfWin(answer){
+    console.log(answer)
+    socket.emit('check if i win', {answer: answer});
 	}//check if win
+
+
 	$("#pass").click(function() {
-        playedAlreadies++;
-		passes++;
-		mistake.push(randomNumberMainOption);
-		game();
-    });
+    socket.emit('i pass')
+  });
+
 	$("#ppholder").on("click", ".p",function() {
 			var textOfP = $(this).text();
 			if(textOfP){
-				counter+=-1;
+        myAnswer = myAnswer.substr(0,myAnswer.length-1);
+				myCounter-=1;
 				$("#butttholder").append("<div class='button'>"+$(this).text()+"</div>");
 			}
-			//console.log(counter);
 			$(this).text("");
     });//on click p
+
+
 	$(".start").click(function() {
-		$("#home").hide();
-		$("#game").show();
-		$("#end").hide();
-        game();
-        createPlayer();
-		    Timer();
-    });//start the game
+		// $("#home").hide();
+		// $("#game").show();
+		// $("#end").hide();
+      createPlayer();
+	});//start the game
 
 
   var createPlayer = function(){
@@ -236,10 +130,26 @@ $(document).ready(function(){
 
 //créer le tableau des participants pour le nouveau connecté
   socket.on('createMyNewScoreBoard', function(data){
+    $("#home").hide();
+    $("#game").show();
+    $("#end").hide();
+    timer(20);
     addToPlayersBoard(data.players);
     socket.emit('Send me a new flag', {data})
   });
 
+//Ajoute l'input pour entrer un mot de passe si l'id est reconnu
+  socket.on('ask pwd', function(){
+    $(".start").off('click');
+    showPwdinput();
+  })
+
+//Ajouter le text si erreur de mot de passe
+  socket.on('no credential', function(){
+    var password = document.getElementById('pwd');
+    password.value = '';
+    showCredentialMsg()
+  });
 
 //ajouter le nouveau participants au tableau des connecté
   socket.on('addNewPlayerToBoard', function(data){
@@ -250,21 +160,57 @@ $(document).ready(function(){
     deletePlayerFromBoard(data.user.user);
   });
 
+  socket.on('update score', function(data){
+    updateScore(data.user, data.score)
+    // socket.emit('Send me a new flag');
+  })
+
+  socket.on('next round', function(data){
+    // updateScore(data.user, data.score)
+    socket.emit('Send me a new flag');
+  })
 
   socket.on('newFlag', function(data){
-    console.log(data);
-    // currentFlag = data.flag;
-    // capital = data.capital;
-    // changeCountry(data.country, data.flag)
-    // $(".theCountry").text(data.country);
-    // $("img").attr("src", data.flag);
-    game(data.country, data.flag, data.capitalsize)
-    // getTheAnswerAndBreakIt()
-
+    game(data.country, data.flag, data.capitalsize,data.letters)
+    console.log(data.capital)
   });
 
+  socket.on('update time', function(data){
+    console.log(data)
+    var timer = document.getElementById('time');
+    var timeLeft = document.createTextNode(' Time Left : ' + data.timeLeft);
+    console.log(timeLeft);
+    timer.appendChild(timeLeft)
+  })
+
+  socket.on('please register', function(data){
+    var myButton = document.getElementById('send')
+    $('#end').fadeIn()
+    $("#register").text('Votre score est de : ' + data.score + " vous pouvez l'enregistrer et l'améliorer ensuite");
+    var registerName = document.getElementById('registerName');
+    registerName.value = data.user;
+    registerName.readOnly = true;
+    myButton.addEventListener('click', function(){
+      var mail = document.getElementById('mail').value;
+      var passInitial = document.getElementById('pass_initial').value;
+      var pass_check = document.getElementById('pass_check').value;
+      socket.emit('register my account', {user : registerName.value, mail: mail, passInitial: passInitial, pass_check: pass_check})
+    })
+  })
+
+
+  var updateScore = function(playerID, score){
+    var connectedPlayers = document.getElementById('scoreBoard');
+    var rowCount = connectedPlayers.rows.length;
+    var tds = connectedPlayers.getElementsByTagName('td')
+    for (var i = 0; i < tds.length; i++){
+      if (tds[i].innerHTML == playerID){
+        tds[i+1].innerHTML = score;
+      };
+    };
+  };
+
   var addToPlayersBoard = function(data){
-    // var cap = document.getElementById('playerslist');
     var connectedPlayers = document.getElementById('scoreBoard');
     for (var i in data){
       var newRowPlayer = connectedPlayers.insertRow(connectedPlayers.rows.length);
@@ -273,7 +219,7 @@ $(document).ready(function(){
       var newCellBestScore = newRowPlayer.insertCell(2);
 
       var newTextPlayer = document.createTextNode(data[i].user);
-      var newTextScore = document.createTextNode(0);
+      var newTextScore = document.createTextNode(data[i].score);
       var newTextBestScore = document.createTextNode(data[i].bestScore);
 
       newCellUser.appendChild(newTextPlayer);
@@ -296,65 +242,95 @@ $(document).ready(function(){
     };
   };
 
+  var showPwdinput = function(){
+    var pwd = document.getElementById('pwd');
+    if (pwd == null){
+      var loginField = document.getElementsByClassName('form-control')[0];
+      var myP = document.createElement('p')
+      var pwdInput = document.createElement('input');
+      pwdInput.id = 'pwd'
+      pwdInput.className ='form-control'
+      pwdInput.placeholder = 'indiquez votre mot de passe ici';
+      pwdInput.type = 'password';
+      loginField.appendChild(myP);
+      loginField.appendChild(pwdInput);
+      sendIdAndPassword();
+    }
+  };
+
+  var showCredentialMsg = function(){
+    var errorMessage = document.getElementById('errorMessage');
+    if (errorMessage == null){
+      var loginField = document.getElementsByClassName('form-control')[0];
+      var errorMessage = document.createElement('div');
+      errorMessage.id = 'errorMessage'
+      errorMessage.setAttribute("style", "color: red; font-family: Arial");
+      var myPText = document.createTextNode('identifiant ou mot passe erroné, réessayer s\'il vous plaît');
+      errorMessage.appendChild(myPText);
+      loginField.appendChild(errorMessage);
+    };
+  };
+
+  var sendIdAndPassword = function(){
+    $(".start").click(function() {
+      var username = document.getElementById('userName').value;
+      var pwd = document.getElementById('pwd').value;
+      socket.emit('check my ids', {username : username , pwd : pwd});
+    });
+  };
 
 
-	function Timer(){
-			var gameTime=setInterval(function(){
-				miliseconds++;
-				if(miliseconds>=10){
-					miliseconds=0;
-					seconds++;
-				}
-				$("#time").text("time left : "+(180-seconds));
+	var timer = function(limit){
+        var gameTime=setInterval(function(){
+          if(limit <= 0){
+            clearInterval(gameTime);
+            endGame()
+          }else {
+            limit--;
+            $("#time").text("time left : "+(limit));
+          };
+      },1000);//set interval
+  }//timer
 
-				//console.log("seconds : "+seconds+" interv : "+interv);
-				if(seconds>=limit){
-					clearInterval(gameTime);
-					endGame();
-					}
-			},100*interv);//set interval
-	}//timer
 	$("#startagain").click(function() {
         resetEverything();
     });
 
-	function game(country,flag,capitalsize,buttons){
+	var game = function(country,flag,capitalsize,data){
 		$("#butttholder").empty();
 		$("#ppholder").empty();
 		resetAll();
 		genButtons(16);
-		// generateNumber();
-		// getTheAnswerAndBreakIt();
-		distributeLetters(16);
-		fillTheRemainingButtons(16);
+    capitalSize = capitalsize;
+		distributeLetters(data);
 		changeCountry(country,flag);
 		genPs(capitalsize);
 	}//function game
 
+  var distributeLetters = function(letters){
+		for(var i= 0; i < letters.length;i++){
+      $('.'+i+'.button').text(letters[i])
+    };
+  };
+
 
 
 	function endGame(){
-			$("#game").hide();
-			$("#home").hide();
-			$("#end").show();
-			$("#wrong").text("wrong : "+wrongs);
-			$("#correct").text("correct : "+rights);
-			accuracy=(100*(rights-wrongs))/(playedAlreadies);
-			if(accuracy<0){
-				accuracy=0;
-			}
-			$("#accuracy").text("accuracy : "+accuracy+"%");
-			for(var f=0;f<mistake.length;f++){
-				var lesFautes=mistake[f];
-				$("#fautes").append(countries[lesFautes]+" : "+capitals[lesFautes]+"<br>");
-			}//write the mistakes
-
-
-			/*for(var r=0;r<correct.length;r++){
-				var lesJustes=correct[r];
-				$("#justes").append(countries[lesJustes]+" : "+capitals[lesJustes]+"<br>");
-			}*///write the rights
-			//console.log(miliseconds);
+    socket.emit('end game', {message:'c\’est la fin'})
+			$("#game").fadeOut();
+			// $("#home").hide();
+      console.log('fin du jeu')
+			// $("#end").show();
+			// $("#correct").text("correct : " + 'blabla');
+			// accuracy=(100*(rights-wrongs))/(playedAlreadies);
+			// if(accuracy<=0){
+			// 	accuracy=0;
+			// }
+			// $("#accuracy").text("accuracy : "+accuracy+"%");
+			// for(var f=0;f<mistake.length;f++){
+			// 	var lesFautes=mistake[f];
+			// 	$("#fautes").append(countries[lesFautes]+" : "+capitals[lesFautes]+"<br>");
+			// }//write the mistakes
 	}//endgame funciotn
 
   window.addEventListener('beforeunload', function(){

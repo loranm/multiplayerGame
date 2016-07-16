@@ -4,11 +4,13 @@ html
     meta(charset='UTF-8')
     title Capitals Quizz
     link(rel='stylesheet', href='../stylesheets/game.css')
+    //- link(rel="stylesheet" href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css')
   body
     #home
       #holderofHolder
-        .login_field
-          input(type='text', name='login', placeholder='Choose a username' id='userName')
+        .input-group
+          .form-control
+            input(type='text', name='user', placeholder='Choose a username' id='userName')
         #holderOfStart
           .start Start
     #game
@@ -18,7 +20,7 @@ html
           #pass.buttonScore Pass
         #time.buttonScore Pass
       #connectedPlayers.gamedivs
-        table#scoreBoard
+        table.table#scoreBoard
           thead
             tr
               th
@@ -44,8 +46,21 @@ html
         #butttholder
     #end
       .results
-        #wrong
+        #register
         hr
+        .input-group
+          .form-control
+            input(type='text', name='login', placeholder='Choose a username' id='registerName' required)
+            br
+          .form-control
+            input(type='mail', name='mail', placeholder='your email address' id='mail' required)
+          .form-control
+            input(type='password', name='pass_initial', placeholder='Choose a password' id='pass_initial' required)
+          .form-control
+            input(type='password', name='pass_check', placeholder='Repeat your password for verification' id='pass_check' required)
+          .form-control
+            input(type='button', name='send', placeholder='Save my score' id='send' value='send')
+        
         #fautes.hidd
       // end of wrong
       br
@@ -55,6 +70,6 @@ html
         // end of right
         #accuracy
       #startagain Start Again
-    script(src='https://code.jquery.com/jquery-2.2.4.min.js')
+    script(src='../javascripts/jquery.min.js')
     script(src='../javascripts/game.js')
     script(src='/socket.io/socket.io.js')
