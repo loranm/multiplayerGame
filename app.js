@@ -8,10 +8,10 @@ var chalk = require('chalk');
 var bcrypt = require('bcrypt');
 
 var routes = require('./routes/index');
-var users = require('./routes/users');
+// var users = require('./routes/users');
 var game = require('./routes/game_router');
-var test = require('./routes/test');
-var chat = require('./routes/chat');
+// var test = require('./routes/test');
+// var chat = require('./routes/chat');
 var db = require('./bin/db.js');
 var shuffle = require('./bin/shuffle_module.js');
 var salt = require('./bin/salt.js')
@@ -36,10 +36,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-app.use('/users', users);
+// app.use('/users', users);
 app.use('/game', game)
-app.use('/test', test)
-app.use('/chat', chat)
+// app.use('/test', test)
+// app.use('/chat', chat)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -92,30 +92,38 @@ app.io.on('connection', function(socket) { //connexion initiale au websocket
 
 //Recherche du pseudo dans la base et connection au jeu si non trouvé
     socket.on('new player', function(user) {
+      if(user != ''){
+        var top5 = [];
         var collection = db.get().collection('players');
-        collection.find({
-            'user': user
-        }).toArray(function(err, data) {
-            if (err) {
-                throw err;
-            } else {
-                if (data.length > 0) {
-                  socket.emit('ask pwd')
-                }else{
-                    players[socket.id] = new player({
-                        user: user,
-                        bestScore: 0
-                    })
-                    var newPlayer = players[socket.id];
-                    socket.broadcast.emit('addNewPlayerToBoard', {
-                        newPlayer
-                    });
-                    socket.emit('createMyNewScoreBoard', {
-                        players
-                    });
-                };
-            };
+        collection.find({},{user:1,bestScore:1,_id:0}).sort({bestScore:-1}).limit(5).toArray(function(err, data){
+          socket.emit('leaderBoard data', data)
         });
+        collection.find({
+          'user': user
+        }).toArray(function(err, data) {
+          if (err) {
+            throw err;
+          } else {
+            if (data.length > 0) {
+              socket.emit('ask pwd',{user: data[0].user})
+            }else{
+              players[socket.id] = new player({
+                user: user,
+                bestScore: 0
+              })
+              var newPlayer = players[socket.id];
+              socket.broadcast.emit('addNewPlayerToBoard', {
+                newPlayer
+              });
+              socket.emit('createMyNewScoreBoard', {
+                players
+              });
+            };
+          };
+        });
+      }else{
+        console.log('il faut indiquer un pseudo')
+      }
     });
 
 /*************************************************************************
@@ -136,7 +144,6 @@ GESTION DE LA CONNEXION AU JEU POUR UN USER EXISTANT
               collection.find({'user':data.username}).toArray(function(err,data){
                 var foundPlayer = {user: data[0].user, mail: data[0].mail, bestScore: data[0].bestScore};
                 var hash = data[0].pwd;
-                console.log(foundPlayer)
                 if(err){
                 }else{
                   bcrypt.compare(pwd, hash, function(err, res){
@@ -153,7 +160,7 @@ GESTION DE LA CONNEXION AU JEU POUR UN USER EXISTANT
                             players
                         });
                       }else{
-                        console.log('erreur de mot de passe')
+                        socket.emit('no credential')
 
                       };
                     };
@@ -189,7 +196,7 @@ MECANIQUE DU JEU
               var collection = db.get().collection('countries')
               collection.find({'country': {$nin: doNotSendTheseCountries}}).toArray(function(err, data) {
                 if (err) {
-                  console.log('ERREUR')
+                  console.log(err)
                 } else {
                   var max = (data.length); ///TAILLE DE LA BASE DE DONNEES
                   var sendFlagNb = randInt(0, max);
@@ -198,7 +205,7 @@ MECANIQUE DU JEU
                   var capital = data[sendFlagNb].capital;
                   var letters = shuffle.usingShuffle(shuffle.shuffleArray, capital);
 
-                  socket.emit('newFlag', {message:'new Flag', country:flagToSend, flag:data[sendFlagNb].flag, capitalsize:data[sendFlagNb].capital.length, capital:data[sendFlagNb].capital, letters: letters})
+                  socket.emit('newFlag', {message:'new Flag', country:flagToSend, flag:data[sendFlagNb].flag, capitalsize:data[sendFlagNb].capital.length, capital:data[sendFlagNb].capital, letters: letters, time:180})
                 };
               });
             };
@@ -208,7 +215,6 @@ MECANIQUE DU JEU
     });
 
     socket.on('check if i win', function(data){
-      console.log(data.answer)
       var answer = data.answer;
       var countryToGuess = players[socket.id].countryToGuess;
       db.connect('mongodb://localhost:27017/game', function(err){
@@ -219,7 +225,7 @@ MECANIQUE DU JEU
           var collection = db.get().collection('countries');
           collection.find({'country':countryToGuess,'capital':answer}).toArray(function(err, data){
             if (err){
-              console.log('ERREUR')
+              console.log(err)
             }else{
               if (data.length){
                 players[socket.id].guessedCountries.push(players[socket.id].countryToGuess);
@@ -227,9 +233,7 @@ MECANIQUE DU JEU
                 players[socket.id].score += Math.ceil(1/48);
                 app.io.emit('update score', {user: players[socket.id].user,score: players[socket.id].score});
                 socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
-                console.log('vous avez trouvé');
               }else{
-                console.log('dommage ce n est pas ça');
                 players[socket.id].askedCountries.push(players[socket.id].countryToGuess);
                 players[socket.id.countryToGuess] = [];
                 socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
@@ -254,15 +258,35 @@ FIN DU JEU
     socket.on('end game', function(data){
       var user = players[socket.id].user
       var collection = db.get().collection('players');
+      var score = players[socket.id].score
+      var rank = 0;
+      collection.find({bestScore:{$gt:score}},{'_id':0,'bestScore':1}).toArray(function(err,data){
+        if(err){
+          console.log(err)
+        }else{
+          rank = data.length+1;
+          return rank;
+        };
+      });
+
       collection.find({'user': user}).toArray(function(err, data){
         if(data.length > 0){
           if (players[socket.id].score > players[socket.id].bestScore){
             collection.update({'user': user},{$set: {'bestScore':players[socket.id].score}})
           }
+          socket.emit('show results', {user: user, score: players[socket.id].score, rank: rank});
         }else{
-          socket.emit('please register', {user: players[socket.id].user, score: players[socket.id].score})
-        }
+          socket.emit('please register', {user: players[socket.id].user, score: players[socket.id].score, rank:rank})
+        };
       });
+    });
+
+    socket.on('startAgain', function(){
+      players[socket.id].score = 0;
+      players[socket.id].guessedCountries = [];
+      players[socket.id].askedCountries = [];
+      app.io.emit('update score', {user: players[socket.id].user,score: players[socket.id].score});
+      socket.emit('next round', {user:  players[socket.id].user, score: players[socket.id].score})
     });
 
 
@@ -270,41 +294,38 @@ FIN DU JEU
 CREATION D'UN COMPTE DANS LA BASE
 ******************************************************************************/
     socket.on('register my account', function(data){
-      console.log(data);
+      console.log('register =' + data )
       var errors = {containErrors: false}
       if (checkEmail(data.mail)){
 
       }else{
-        console.log('adresse erronnée')
         errors.containErrors = true;
-        errors.mail = 'adresse e-mail nom valide';
+        errors.mail = 'adresse e-mail non valide';
       };
 
       if(data.passInitial === ''){
-        console.log('mot de passe vide')
         errors.containErrors = true;
-        errors.passEmpty = 'il faut indiquer un mot de passe';
+        errors.pass_initial = 'il faut indiquer un mot de passe';
       }else if(data.passInitial != data.pass_check){
         errors.containErrors = true;
-        errors.passDontMatch = 'Les mots de passe ne correpondent pas';
+        errors.pass_check = 'Les mots de passe ne correpondent pas';
       }else{
-        console.log('ok pour le 2 mots de passe');
         //chiffrage des mots de passe.
       }
 
       if(errors.containErrors == true){
         socket.emit('form invalid', {errors : errors});
+        errors = {};
       }else{
         var newMongoPlayer = {'user':data.user, 'mail': data.mail, 'pwd':data.passInitial, 'bestScore': players[socket.id].score};
         salt.addNewMongoPlayer(newMongoPlayer);
+        socket.emit('show results', {message: 'utilisateur enregistré'});
       };
-      // console.log(JSON.stringify(errors));
 
     });
 
     var checkEmail = function(address){
       var regMail = /^(([a-zA-Z]|[0-9])|([-]|[_]|[.]))+[@](([a-zA-Z0-9])|([-])){2,63}[.](([a-zA-Z0-9]){2,63})+$/gi
-      console.log(address);
       return regMail.test(address);
     };
 
@@ -347,12 +368,26 @@ var dbSize = function(){
   });
 }
 
+var rankingCalculation = function(score){
+  db.connect('mongodb://localhost:27017/game', function(err){
+    if(err){
+      console.log(err)
+    }else{
+      var collection = db.get().collection('players');
+      collection.find({},{'_id':0,'bestScore':1}).sort({bestScore: -1}).toArray(function(err,data){
+        if(err){
+          console.log(err)
+        }else{
+          var scores = []
+          for (var i in data){
+            scores.push(data[i].bestScore);
+          };
+          return scores.indexOf(score)+1;
+        };
+      });
+    };
+  });
+};
 
 
 module.exports = app;
-
-
-/*conditions de fin de jeu
-  le joueur a découvert les 48 pays
-  le temps de jeu est terminé.
-  */

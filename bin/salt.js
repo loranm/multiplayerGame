@@ -18,13 +18,12 @@ var addNewMongoPlayer = function(options) {
                         if (err) {
                             console.log(err)
                         } else {
-                            console.log('mdp crypté ' + hash);
                             options.pwd = hash
                             collection.insert(options, function(err, res) {
                                 if (err) {
                                     console.log(err);
                                 } else {
-                                    console.log(res);
+                                    console.log('ok');
                                 };
                             });
                         };

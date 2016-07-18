@@ -1,8 +1,18 @@
 @charset "utf-8";
 /* CSS Document */
-* {
+/** {
     box-sizing: border-box;
-}
+}*/
+
+/*input{
+  text-align: center;
+  text-family: Oswald;
+  font-size: 1em;
+  border: none;
+  border-radius: 20px;
+  overflow: auto;
+}*/
+
 body,html{
 	width:100%;
 	height:100%;
@@ -14,7 +24,7 @@ body,html{
     width: 100%;
     height: 100%;
     background: #0A0310;;
-}	
+}
 .start {
     font-family: Oswald;
     font-size: 4em;
@@ -48,6 +58,24 @@ div#time {
     position: absolute;
     top: 0;
 }
+
+/*table {
+  border-collapse: collapse;
+}
+
+th, td  {
+  font-family: arial;
+  font-size: 0.7em;
+  padding: 1px 12px;
+  text-align: center;
+
+  border-bottom: 0.5px solid #f5f5f5;
+}
+tr:hover{
+  background-color: #f5f5f5;
+  color: black;
+}*/
+
 #holderOfStart {
     display: inline-flex;
     background: #FF005B;
@@ -91,6 +119,14 @@ div#holderofHolder {
 }
 #buttholder{
 	height:35%;
+}
+
+#connectedPlayers{
+  display: inline-block;
+  width: 30%;
+  height: 25%;
+  border: 1px solid white;
+  color: white;
 }
 .gamedivs{
 	display:block;
@@ -357,7 +393,3 @@ div#startagain {
     margin: 50px 0;
 }
 }
-
-
-
-

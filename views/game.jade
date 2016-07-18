@@ -4,64 +4,79 @@ html
     meta(charset='UTF-8')
     title Capitals Quizz
     link(rel='stylesheet', href='../stylesheets/game.css')
-    //- link(rel="stylesheet" href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css')
   body
+    #instructions 
+      h2 Capitals Quizz
+      p
+      | This game is quite simple,you have 
+      em 1 minute
+      |  to guess as much capitals from the flags which are presented to you.
+      p 
+      em Click on the buttons 
+      | at the bottom to spell the name of the Capital.
+      p
+      | Oh and if you score, don't forget to register to appear on the leaderboard for ever and ever.
     #home
       #holderofHolder
-        .input-group
-          .form-control
-            input(type='text', name='user', placeholder='Choose a username' id='userName')
+        #loginfields
+          input(type='text', name='user', placeholder='Choose a username' id='userName' autofocus)
         #holderOfStart
           .start Start
-    #game
-      h6(style='display:block;')
-      #score.gamedivs
-        #passHolder
-          #pass.buttonScore Pass
-        #time.buttonScore Pass
-      #connectedPlayers.gamedivs
-        table.table#scoreBoard
+    #game.gamedivs
+      // <div id="header" class="gamedivs">
+      #time
+      div
+        table#scoreBoard.table
+          caption Currently playing....
           thead
             tr
               th
-                | Joueur
+                | Players
               th
-                | Score actuel
+                | Score
               th
-                | Meilleur Score
+                | Best Score
           tbody
-            //- tr
-            //-   td
-            //-     | toto
-            //-   td
-            //-     | 12
-            //-   td
-            //-     | 200
-      #header.gamedivs
+          
+        table#leaderBoard.table(style='float:right')
+          caption Leader Board
+          thead
+            tr
+              th
+                | Rank
+              th
+                | Players
+              th
+                | Best Score
+          tbody
+            tr
+      div
         .theCountry
         img(alt='country')
-      #pholder.gamedivs
+      #pass Pass
+      #pholder
         #ppholder
-      #buttholder.gamedivs
+      #buttholder
         #butttholder
     #end
       .results
+        //- #results
         #register
-        hr
-        .input-group
-          .form-control
-            input(type='text', name='login', placeholder='Choose a username' id='registerName' required)
-            br
-          .form-control
-            input(type='mail', name='mail', placeholder='your email address' id='mail' required)
-          .form-control
-            input(type='password', name='pass_initial', placeholder='Choose a password' id='pass_initial' required)
-          .form-control
-            input(type='password', name='pass_check', placeholder='Repeat your password for verification' id='pass_check' required)
-          .form-control
-            input(type='button', name='send', placeholder='Save my score' id='send' value='send')
-        
-        #fautes.hidd
+          .input-group
+            .form-control
+              input(type='text', name='login', placeholder='Choose a username' required)
+              br
+            #mail.form-control
+              input(type='mail', name='mail', placeholder='your email address' required)
+            #pass_initial.form-control
+              input(type='password', name='pass_initial', placeholder='Choose a password' required)
+            #pass_check.form-control
+              input(type='password', name='pass_check', placeholder='Repeat your password for verification' required)
+            .form-control
+              input(type='submit', name='send', placeholder='Save my score' id='send' value='send')
+      
+      //- #fautes.hidd
+      
       // end of wrong
       br
       // start of right
@@ -70,6 +85,6 @@ html
         // end of right
         #accuracy
       #startagain Start Again
-    script(src='../javascripts/jquery.min.js')
-    script(src='../javascripts/game.js')
-    script(src='/socket.io/socket.io.js')
+      script(src='../javascripts/jquery.min.js')
+      script(src='../javascripts/game.js')
+      script(src='/socket.io/socket.io.js')
