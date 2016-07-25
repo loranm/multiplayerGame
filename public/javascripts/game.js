@@ -99,6 +99,13 @@ document.addEventListener('DOMContentLoaded', function() {
 /******************************************************************************
   DIALOGUE CLIENT SERVEUR VIA SOCKET.IO
 *******************************************************************************/
+    socket.on('invalid username', function(data){
+      displayUsernameErrorMsg(data)
+    });
+
+
+
+
 
     //crée le tableau des participants pour le nouveau connecté
     socket.on('createMyNewScoreBoard', function(data) {
@@ -263,6 +270,19 @@ document.addEventListener('DOMContentLoaded', function() {
   FUNCTIONS APPELEES par le client
 ********************************************************************/
 
+  var displayUsernameErrorMsg = function(data){
+    var usernameInput = document.getElementById('userName');
+    var errorMessageDiv = document.getElementById('userNameErrorMsg');
+
+    if (errorMessageDiv === null){
+      errorMessageDiv = document.createElement('div');
+      errorMessageDiv.id = 'userNameErrorMsg';
+      errorMessageDiv.innerHTML= data.errorsUsername.badFormatText || data.errorsUsername.sizeText;
+      usernameInput.parentNode.appendChild(errorMessageDiv);
+    }else{
+      errorMessageDiv.innerHTML = data.errorsUsername.badFormatText || data.errorsUsername.sizeText;
+    }
+  }
 
 
   var updateScore = function(playerID, score, bestScore) {
@@ -322,6 +342,10 @@ document.addEventListener('DOMContentLoaded', function() {
   var showPwdinput = function(user) {
       var currentUser = document.getElementById('userName');
       var pwd = document.getElementById('pwd');
+      var userNameErrorMsg = document.getElementById('userNameErrorMsg');
+      if (userNameErrorMsg != null){
+        userNameErrorMsg.parentNode.removeChild(userNameErrorMsg);
+      }//suppression des éventuels message d'erreur de connexion.
       if (pwd == null) {
           var loginField = document.getElementById('loginfields');
           var reminderUserText = document.createTextNode('Enter password for : ' + user)

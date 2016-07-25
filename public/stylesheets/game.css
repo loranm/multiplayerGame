@@ -18,8 +18,9 @@ body, html {
 
 caption{
   font-family: open sans;
-  font-size: 1em;
-  color: black;
+  font-size: 1.2em;
+  font-style: bold;
+  color: white;
 }
 
 #correct{

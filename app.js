@@ -89,34 +89,46 @@ app.io.on('connection', function(socket) { //connexion initiale au websocket
 
 //Recherche du pseudo dans la base et connection au jeu si non trouvé
   socket.on('new player', function(user) {
-    if(user.trim() != ''){
-      var collection = db.get().collection('players');
-      collection.find({
-        'user': user.trim()
-      }).toArray(function(err, data) {
-        if (err) {
-          throw err;
-        } else {
-          if (data.length > 0) {
-            socket.emit('ask pwd',{user: data[0].user})
-          }else{
-            players[socket.id] = new player({
-              user: user.trim(),
-              bestScore: 0
-            })
-            var newPlayer = players[socket.id];
-            socket.broadcast.emit('addNewPlayerToBoard', {
-              newPlayer
-            });
-            socket.emit('createMyNewScoreBoard', {
-              players
-            });
+    var errorsUsername = {containErrors : false};
+    var user = user.trim();
+    if(user.length > 0 && user.length < 15 ){
+      if (checkUserName(user)){
+        var collection = db.get().collection('players');
+        collection.find({
+          'user': user.trim()
+        }).toArray(function(err, data) {
+          if (err) {
+            throw err;
+          } else {
+            if (data.length > 0) {
+              socket.emit('ask pwd',{user: data[0].user})
+            }else{
+              players[socket.id] = new player({
+                user: user.trim(),
+                bestScore: 0
+              })
+              var newPlayer = players[socket.id];
+              socket.broadcast.emit('addNewPlayerToBoard', {
+                newPlayer
+              });
+              socket.emit('createMyNewScoreBoard', {
+                players
+              });
+            };
           };
-        };
-      });
+        });
+      }else{
+        errorsUsername.containErrors = true;
+        errorsUsername.badFormatText = 'Votre pseudo doit contenir uniquement des lettres et des chiffres';
+      }
     }else{
-      console.log('il faut indiquer un pseudo')
+      errorsUsername.containErrors = true;
+      errorsUsername.sizeText = 'Votre pseudo doit contenir au moins une lettre et un maximum de 15 caractères';
     }
+
+    if(errorsUsername.containErrors){
+      socket.emit('invalid username', {errorsUsername : errorsUsername});
+    };
   });
 
 /*************************************************************************
@@ -310,10 +322,8 @@ FIN DU JEU
 CREATION D'UN COMPTE DANS LA BASE
 ******************************************************************************/
     socket.on('register my account', function(data){
-      console.log(chalk.blue(data.passInitial));
 
       var user = {user : data.user, mail: data.mail, pass_initial: data.passInitial, pass_check: data.pass_check} ;
-      console.log(chalk.red(user.pass_initial));
       var errors = {containErrors: false}
       var collection = db.get().collection('players');
 
@@ -353,6 +363,12 @@ CREATION D'UN COMPTE DANS LA BASE
         }
       })
     });
+
+
+    var checkUserName = function(username){
+      var regUser = /^[a-zA-Z0-9_.-]*$/; //vérifie que le username est composé uniquement de lettres et de chiffres.
+      return regUser.test(username);
+    }
 
     var checkEmail = function(address){
       var regMail = /^(([a-zA-Z]|[0-9])|([-]|[_]|[.]))+[@](([a-zA-Z0-9])|([-])){2,63}[.](([a-zA-Z0-9]){2,63})+$/gi
