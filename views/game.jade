@@ -5,14 +5,14 @@ html
     title Capitals Quizz
     link(rel='stylesheet', href='../stylesheets/game.css')
   body
-    #instructions 
+    #instructions
       h2 Capitals Quizz
       p
-      | This game is quite simple,you have 
+      | This game is quite simple,you have
       em 1 minute
-      |  to guess as much capitals from the flags which are presented to you.
-      p 
-      em Click on the buttons 
+      |  to guess as much capitals as you can from the flags which are presented to you.
+      p
+      em Click on the buttons
       | at the bottom to spell the name of the Capital.
       p
       | Oh and if you score, don't forget to register to appear on the leaderboard for ever and ever.
@@ -23,65 +23,86 @@ html
         #holderOfStart
           .start Start
     #game.gamedivs
-      // <div id="header" class="gamedivs">
       #time
-      div
-        table#scoreBoard.table
-          caption Currently playing....
-          thead
-            tr
-              th
-                | Players
-              th
-                | Score
-              th
-                | Best Score
-          tbody
-          
-        table#leaderBoard.table(style='float:right')
-          caption Leader Board
-          thead
-            tr
-              th
-                | Rank
-              th
-                | Players
-              th
-                | Best Score
-          tbody
-            tr
-      div
-        .theCountry
-        img(alt='country')
+      #scores
+        div
+          table#leaderBoard.table(style="float:right")
+            caption Leader Board
+              thead
+                tr
+                  th
+                    | Rank
+                  th
+                    | Players
+                  th
+                    | Best Score
+                  tbody
+                    tr
+                      td 1
+                      td
+                      td
+                    tr
+                      td 2
+                      td
+                      td
+                    tr
+                      td 3
+                      td
+                      td
+                    tr
+                      td 4
+                      td
+                      td
+                    tr
+                      td 5 
+                      td
+                      td
+          table#scoreBoard.table
+            caption Currently playing....
+            thead
+              tr
+                th
+                  | Players
+                th
+                  | Score
+                th
+                  | Best Score
+            tbody
+              tr
+              
+              
+              
+      .theCountry
+      img(alt='country')
       #pass Pass
+      #correct Correct !
+      #wrong Wrong !
       #pholder
         #ppholder
       #buttholder
         #butttholder
     #end
       .results
-        //- #results
         #register
           .input-group
             .form-control
               input(type='text', name='login', placeholder='Choose a username' required)
               br
             #mail.form-control
-              input(type='mail', name='mail', placeholder='your email address' required)
+              input(type='email', name='mail', placeholder='your email address' required)
             #pass_initial.form-control
               input(type='password', name='pass_initial', placeholder='Choose a password' required)
             #pass_check.form-control
               input(type='password', name='pass_check', placeholder='Repeat your password for verification' required)
             .form-control
-              input(type='submit', name='send', placeholder='Save my score' id='send' value='send')
-      
-      //- #fautes.hidd
-      
+              input(type='submit', name='send', id='send' value='send')
+
+
       // end of wrong
       br
       // start of right
       .results
-        #correct
+        #comments
         // end of right
         #accuracy
       #startagain Start Again

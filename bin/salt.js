@@ -1,10 +1,10 @@
 var bcrypt = require('bcrypt');
-var db = require('./db.js')
+var db = require('./db.js');
+
 
 const saltRounds = 10;
 
-
-var addNewMongoPlayer = function(options) {
+var addNewMongoPlayer = function(err, options, callback) {
     db.connect('mongodb://localhost:27017/game', function(err) {
         if (err) {
             console.log(err);
@@ -23,7 +23,7 @@ var addNewMongoPlayer = function(options) {
                                 if (err) {
                                     console.log(err);
                                 } else {
-                                    console.log('ok');
+                                  return res
                                 };
                             });
                         };
@@ -33,5 +33,6 @@ var addNewMongoPlayer = function(options) {
         };
     });
 };
+
 
 exports.addNewMongoPlayer = addNewMongoPlayer;

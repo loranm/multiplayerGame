@@ -8,10 +8,7 @@ var chalk = require('chalk');
 var bcrypt = require('bcrypt');
 
 var routes = require('./routes/index');
-// var users = require('./routes/users');
 var game = require('./routes/game_router');
-// var test = require('./routes/test');
-// var chat = require('./routes/chat');
 var db = require('./bin/db.js');
 var shuffle = require('./bin/shuffle_module.js');
 var salt = require('./bin/salt.js')
@@ -26,7 +23,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -91,237 +88,270 @@ app.io.on('connection', function(socket) { //connexion initiale au websocket
 
 
 //Recherche du pseudo dans la base et connection au jeu si non trouvé
-    socket.on('new player', function(user) {
-      if(user != ''){
-        var top5 = [];
-        var collection = db.get().collection('players');
-        collection.find({},{user:1,bestScore:1,_id:0}).sort({bestScore:-1}).limit(5).toArray(function(err, data){
-          socket.emit('leaderBoard data', data)
-        });
-        collection.find({
-          'user': user
-        }).toArray(function(err, data) {
-          if (err) {
-            throw err;
-          } else {
-            if (data.length > 0) {
-              socket.emit('ask pwd',{user: data[0].user})
-            }else{
-              players[socket.id] = new player({
-                user: user,
-                bestScore: 0
-              })
-              var newPlayer = players[socket.id];
-              socket.broadcast.emit('addNewPlayerToBoard', {
-                newPlayer
-              });
-              socket.emit('createMyNewScoreBoard', {
-                players
-              });
-            };
+  socket.on('new player', function(user) {
+    if(user.trim() != ''){
+      var collection = db.get().collection('players');
+      collection.find({
+        'user': user.trim()
+      }).toArray(function(err, data) {
+        if (err) {
+          throw err;
+        } else {
+          if (data.length > 0) {
+            socket.emit('ask pwd',{user: data[0].user})
+          }else{
+            players[socket.id] = new player({
+              user: user.trim(),
+              bestScore: 0
+            })
+            var newPlayer = players[socket.id];
+            socket.broadcast.emit('addNewPlayerToBoard', {
+              newPlayer
+            });
+            socket.emit('createMyNewScoreBoard', {
+              players
+            });
           };
-        });
-      }else{
-        console.log('il faut indiquer un pseudo')
-      }
-    });
+        };
+      });
+    }else{
+      console.log('il faut indiquer un pseudo')
+    }
+  });
 
 /*************************************************************************
 GESTION DE LA CONNEXION AU JEU POUR UN USER EXISTANT
 *******************************************************************************/
-    socket.on('check my ids', function(data){
-      var pwd = data.pwd;
-      db.connect('mongodb://locahost:27017/game', function(err){
-        if (err) {
-          console.log('Impossible de se connecter à la base de données.');
-          process.exit(1);
-        }else{
-          db.connect('mongodb://localhost:27017/game', function(err){
-            if(err){
-              console.log(err)
-            }else{
-              var collection = db.get().collection('players');
-              collection.find({'user':data.username}).toArray(function(err,data){
-                var foundPlayer = {user: data[0].user, mail: data[0].mail, bestScore: data[0].bestScore};
-                var hash = data[0].pwd;
-                if(err){
-                }else{
-                  bcrypt.compare(pwd, hash, function(err, res){
-                    if(err){
-                      console.log(err);
-                    }else {
-                      if(res){
-                        players[socket.id] = new player(foundPlayer)
-                        var newPlayer = players[socket.id];
-                        socket.broadcast.emit('addNewPlayerToBoard', {
-                            newPlayer
-                        });
-                        socket.emit('createMyNewScoreBoard', {
-                            players
-                        });
-                      }else{
-                        socket.emit('no credential')
-
-                      };
+  socket.on('check my ids', function(data){
+    var pwd = data.pwd;
+    db.connect('mongodb://locahost:27017/game', function(err){
+      if (err) {
+        console.log('Impossible de se connecter à la base de données.');
+        process.exit(1);
+      }else{
+        db.connect('mongodb://localhost:27017/game', function(err){
+          if(err){
+            console.log(err)
+          }else{
+            var collection = db.get().collection('players');
+            collection.find({'user':data.username}).toArray(function(err,data){
+              var foundPlayer = {user: data[0].user, mail: data[0].mail, bestScore: data[0].bestScore};
+              var hash = data[0].pwd;
+              if(err){
+              }else{
+                bcrypt.compare(pwd, hash, function(err, res){
+                  if(err){
+                    console.log(err);
+                  }else {
+                    if(res){
+                      players[socket.id] = new player(foundPlayer)
+                      var newPlayer = players[socket.id];
+                      socket.broadcast.emit('addNewPlayerToBoard', {
+                          newPlayer
+                      });
+                      socket.emit('createMyNewScoreBoard', {
+                          players
+                      });
+                    }else{
+                      socket.emit('no credential')
                     };
-                  });
-                };
-              });
-            };
-          });
-        };
-      });
+                  };
+                });
+              };
+            });
+          };
+        });
+      };
     });
+  });
 
 /******************************************************************************
 MECANIQUE DU JEU
 *******************************************************************************/
 
-    socket.on('Send me a new flag', function(){
-
-      db.connect('mongodb://localhost:27017/game', function(err) {
-        if (err) {
-          console.log('Impossible de se connecter à la base de données.');
-          process.exit(1);
-        } else {
-          for (var i in players) {
-            if (i === socket.id) {
-              var doNotSendTheseCountries = [];
-              var totalCountries =  players[i].askedCountries.length + players[i].guessedCountries.length;
-              if(totalCountries >= 47){
-                players[i].askedCountries = [];
-              };
-              doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].askedCountries);
-              doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].guessedCountries);
-              var collection = db.get().collection('countries')
-              collection.find({'country': {$nin: doNotSendTheseCountries}}).toArray(function(err, data) {
-                if (err) {
-                  console.log(err)
-                } else {
-                  var max = (data.length); ///TAILLE DE LA BASE DE DONNEES
-                  var sendFlagNb = randInt(0, max);
-                  players[socket.id].countryToGuess = data[sendFlagNb].country;
-                  var flagToSend = players[socket.id].countryToGuess
-                  var capital = data[sendFlagNb].capital;
-                  var letters = shuffle.usingShuffle(shuffle.shuffleArray, capital);
-
-                  socket.emit('newFlag', {message:'new Flag', country:flagToSend, flag:data[sendFlagNb].flag, capitalsize:data[sendFlagNb].capital.length, capital:data[sendFlagNb].capital, letters: letters, time:180})
-                };
-              });
+//interroge Mongo en prenant en compte les pays déja passé et répondus pour éviter de renvoyer 2 fois le même drapeaux.
+  socket.on('Send me a new flag', function(){
+    db.connect('mongodb://localhost:27017/game', function(err) {
+      if (err) {
+        console.log('Impossible de se connecter à la base de données.');
+        process.exit(1);
+      } else {
+        for (var i in players) {
+          if (i === socket.id) {
+            var doNotSendTheseCountries = [];
+            var totalCountries =  players[i].askedCountries.length + players[i].guessedCountries.length;
+            if(totalCountries >= 47){
+              players[i].askedCountries = [];
             };
+            doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].askedCountries);
+            doNotSendTheseCountries.push.apply(doNotSendTheseCountries, players[i].guessedCountries);
+            var collection = db.get().collection('countries');
+            collection.find({'country': {$nin: doNotSendTheseCountries}}).toArray(function(err, data) {
+              if (err) {
+                console.log(err)
+              } else {
+                var max = (data.length); ///TAILLE DE LA BASE DE DONNEES
+                var sendFlagNb = randInt(0, max);
+                players[socket.id].countryToGuess = data[sendFlagNb].country;
+                var flagToSend = players[socket.id].countryToGuess
+                var capital = data[sendFlagNb].capital;
+                var letters = shuffle.usingShuffle(shuffle.shuffleArray, capital);
+                socket.emit('newFlag', {message:'new Flag', country:flagToSend, flag:data[sendFlagNb].flag, capitalsize:data[sendFlagNb].capital.length, capital:data[sendFlagNb].capital, letters: letters, time:180})
+                var collection = db.get().collection('players');
+                collection.find({bestScore: {$ne:0}},{user:1,bestScore:1,_id:0}).sort({bestScore:-1}).limit(5).toArray(function(err, data){
+                  app.io.emit('update leaderBoard data',data);
+                });
+              };
+            });
           };
         };
-      });
+      };
     });
+  });
 
-    socket.on('check if i win', function(data){
-      var answer = data.answer;
-      var countryToGuess = players[socket.id].countryToGuess;
-      db.connect('mongodb://localhost:27017/game', function(err){
-        if(err){
-          console.log('Impossible de se connecter à la base de données.');
-          process.exit(1);
-        }else{
-          var collection = db.get().collection('countries');
-          collection.find({'country':countryToGuess,'capital':answer}).toArray(function(err, data){
-            if (err){
-              console.log(err)
-            }else{
-              if (data.length){
-                players[socket.id].guessedCountries.push(players[socket.id].countryToGuess);
-                players[socket.id].countryToGuess = [];
-                players[socket.id].score += Math.ceil(1/48);
-                app.io.emit('update score', {user: players[socket.id].user,score: players[socket.id].score});
-                socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
-              }else{
-                players[socket.id].askedCountries.push(players[socket.id].countryToGuess);
-                players[socket.id.countryToGuess] = [];
-                socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
+//Vérifie dans mongo si on retrouve la capital et le pays ensemble, si oui c'est une bonne réponse, sinon c'est faux.
+  socket.on('check if i win', function(data){
+    var answer = data.answer;
+    var countryToGuess = players[socket.id].countryToGuess;
+    db.connect('mongodb://localhost:27017/game', function(err){
+      if(err){
+        console.log(err);
+        process.exit(1);
+      }else{
+        var collection = db.get().collection('countries');
+        collection.find({'country':countryToGuess,'capital':answer}).toArray(function(err, data){
+          if (err){
+            console.log(err)
+          }else{
+            if (data.length){
+              players[socket.id].guessedCountries.push(players[socket.id].countryToGuess);
+              players[socket.id].countryToGuess = [];
+              players[socket.id].score += Math.ceil(1/48);
+              if(players[socket.id].score > players[socket.id].bestScore){
+                players[socket.id].bestScore = players[socket.id].score;
               };
+              app.io.emit('update score', {user: players[socket.id].user,score: players[socket.id].score, bestScore : players[socket.id].bestScore});
+              socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
+              socket.emit('correct answer');
+            }else{
+              socket.emit('wrong answer');
+              players[socket.id].askedCountries.push(players[socket.id].countryToGuess);
+              players[socket.id.countryToGuess] = [];
+              socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
             };
-          });
-        };
-      });
+          };
+        });
+      };
     });
+  });
 
-
-    socket.on('i pass', function(err,data){
-        players[socket.id].askedCountries.push(players[socket.id].countryToGuess);
-        players[socket.id].countryToGuess = [];
-        socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
-    });
+//gestion du bouton 'pass'
+  socket.on('i pass', function(err,data){
+      players[socket.id].askedCountries.push(players[socket.id].countryToGuess);
+      players[socket.id].countryToGuess = [];
+      socket.emit('next round',{user: players[socket.id].user, score : players[socket.id].score});
+  });
 
 /******************************************************************************
 FIN DU JEU
 ******************************************************************************/
 
-    socket.on('end game', function(data){
-      var user = players[socket.id].user
-      var collection = db.get().collection('players');
-      var score = players[socket.id].score
-      var rank = 0;
-      collection.find({bestScore:{$gt:score}},{'_id':0,'bestScore':1}).toArray(function(err,data){
-        if(err){
-          console.log(err)
-        }else{
-          rank = data.length+1;
-          return rank;
-        };
-      });
+//a la fin du jeu on vérifie si le compte existe déjà, si non on propose à l'utilisateur d'enregistrer son score.
+//si le compte existe déjà on vérifie s'il a amélioré son score et on affiche son classement.
+  socket.on('end game', function(data){
+    var collection = db.get().collection('players');
+    var user = players[socket.id].user
+    var score = players[socket.id].score
+    var rank = 0;
 
-      collection.find({'user': user}).toArray(function(err, data){
+    collection.find({user:user}).toArray(function(err, data){
+      if (err){
+        console.log(err);
+      }else{
         if(data.length > 0){
-          if (players[socket.id].score > players[socket.id].bestScore){
-            collection.update({'user': user},{$set: {'bestScore':players[socket.id].score}})
-          }
-          socket.emit('show results', {user: user, score: players[socket.id].score, rank: rank});
+          if(score> data[0].bestScore){
+            collection.update({user:user}, {$set:{bestScore: score}});
+            collection.find({bestScore: {$ne : 0}},{user:1,bestScore:1,_id:0}).sort({bestScore:-1}).limit(5).toArray(function(err, data){
+              app.io.emit('update leaderBoard data',data);
+              socket.emit('show results', {user: user, score: players[socket.id].score, rank: rank, message: 'Time is up !!! '});
+            });
+          }else{
+            socket.emit('show results', {user: user, score: players[socket.id].score, rank: rank, message: 'Time is up !!! '});
+          };
         }else{
           socket.emit('please register', {user: players[socket.id].user, score: players[socket.id].score, rank:rank})
-        };
-      });
+        }
+      };
     });
 
-    socket.on('startAgain', function(){
-      players[socket.id].score = 0;
-      players[socket.id].guessedCountries = [];
-      players[socket.id].askedCountries = [];
-      app.io.emit('update score', {user: players[socket.id].user,score: players[socket.id].score});
-      socket.emit('next round', {user:  players[socket.id].user, score: players[socket.id].score})
+
+    collection.find({bestScore:{$gt:score}},{'_id':0,'bestScore':1}).toArray(function(err,data){
+      if(err){
+        console.log(err)
+      }else{
+        rank = data.length+1;
+        return rank;
+      };
     });
+  });
+
+//Gestion du bouton 'start again' qui met à jour pour tout le monde le tableau des meilleurs scores.
+  socket.on('startAgain', function(){
+    players[socket.id].score = 0;
+    players[socket.id].guessedCountries = [];
+    players[socket.id].askedCountries = [];
+    socket.emit('resetValue', {'myCounter':0, 'myAnswer':''});
+    app.io.emit('update score', {user: players[socket.id].user,score: players[socket.id].score, bestScore: players[socket.id].bestScore});
+    socket.emit('next round', {user:  players[socket.id].user, score: players[socket.id].score, bestScore: players[socket.id].bestScore})
+  });
 
 
 /******************************************************************************
 CREATION D'UN COMPTE DANS LA BASE
 ******************************************************************************/
     socket.on('register my account', function(data){
-      console.log('register =' + data )
+      console.log(chalk.blue(data.passInitial));
+
+      var user = {user : data.user, mail: data.mail, pass_initial: data.passInitial, pass_check: data.pass_check} ;
+      console.log(chalk.red(user.pass_initial));
       var errors = {containErrors: false}
-      if (checkEmail(data.mail)){
+      var collection = db.get().collection('players');
 
-      }else{
-        errors.containErrors = true;
-        errors.mail = 'adresse e-mail non valide';
-      };
+      collection.find({user:user}).toArray(function(err, results){
+        if(err){
+          console.log(err)
+        }else{
+          if (results > 0){
+            console.log('le compte existe déjà, ne pas le créer')
+          }else{
+            if (checkEmail(user.mail)){
 
-      if(data.passInitial === ''){
-        errors.containErrors = true;
-        errors.pass_initial = 'il faut indiquer un mot de passe';
-      }else if(data.passInitial != data.pass_check){
-        errors.containErrors = true;
-        errors.pass_check = 'Les mots de passe ne correpondent pas';
-      }else{
-        //chiffrage des mots de passe.
-      }
+            }else{
+              errors.containErrors = true;
+              errors.mail = 'this email address is not valid !';
+            };
 
-      if(errors.containErrors == true){
-        socket.emit('form invalid', {errors : errors});
-        errors = {};
-      }else{
-        var newMongoPlayer = {'user':data.user, 'mail': data.mail, 'pwd':data.passInitial, 'bestScore': players[socket.id].score};
-        salt.addNewMongoPlayer(newMongoPlayer);
-        socket.emit('show results', {message: 'utilisateur enregistré'});
-      };
+            if(user.pass_initial.length < 6){
+              errors.containErrors = true;
+              errors.pass_initial = 'Your password must be 6 characters long, try again !';
+            };
 
+            if(user.pass_initial != user.pass_check){
+              errors.containErrors = true;
+              errors.pass_check = 'Passwords do not match ! ';
+            };
+
+            if(errors.containErrors == true){
+              socket.emit('form invalid', {errors : errors});
+              errors = {};
+            }else{
+              var newMongoPlayer = {'user':user.user, 'mail': user.mail, 'pwd':user.pass_initial, 'bestScore': players[socket.id].score};
+              salt.addNewMongoPlayer(null, newMongoPlayer);
+              socket.emit('account created', {user: user.user});
+            };
+         };
+        }
+      })
     });
 
     var checkEmail = function(address){
@@ -349,45 +379,5 @@ TIRAGE AU SORT PAYS
 var randInt = function(min, max) {
     return Math.floor(Math.random() * max) + min
 };
-
-
-var dbSize = function(){
-  db.connect('mongodb://localhost:27017/game', function(err){
-    if (err){
-      throw err
-    }else {
-      var collection = db.get().collection('countries');
-      collection.count(function(err,data){
-        if(err){
-          throw err
-        }else{
-          return data;
-        }
-      })
-    }
-  });
-}
-
-var rankingCalculation = function(score){
-  db.connect('mongodb://localhost:27017/game', function(err){
-    if(err){
-      console.log(err)
-    }else{
-      var collection = db.get().collection('players');
-      collection.find({},{'_id':0,'bestScore':1}).sort({bestScore: -1}).toArray(function(err,data){
-        if(err){
-          console.log(err)
-        }else{
-          var scores = []
-          for (var i in data){
-            scores.push(data[i].bestScore);
-          };
-          return scores.indexOf(score)+1;
-        };
-      });
-    };
-  });
-};
-
 
 module.exports = app;

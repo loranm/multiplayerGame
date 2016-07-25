@@ -95,7 +95,12 @@ document.addEventListener('DOMContentLoaded', function() {
         socket.emit('new player', newUser);
     }
 
-    //créer le tableau des participants pour le nouveau connecté
+
+/******************************************************************************
+  DIALOGUE CLIENT SERVEUR VIA SOCKET.IO
+*******************************************************************************/
+
+    //crée le tableau des participants pour le nouveau connecté
     socket.on('createMyNewScoreBoard', function(data) {
         $("#home").hide();
         $('#instructions').fadeOut();
@@ -104,17 +109,12 @@ document.addEventListener('DOMContentLoaded', function() {
         corrections = [];
         myCounter = 0;
         myAnswer = '';
-        timer(10);
+        timer(60);
         addToPlayersBoard(data.players);
         socket.emit('Send me a new flag', {
             data
         })
     });
-
-
-    socket.on('leaderBoard data', function(data) {
-        createLeaderBoard(data);
-    })
 
     //Ajoute l'input pour entrer un mot de passe si l'id est reconnu
     socket.on('ask pwd', function(data) {
@@ -123,14 +123,14 @@ document.addEventListener('DOMContentLoaded', function() {
         showPwdinput(data.user);
     })
 
-    //Ajouter le text si erreur de mot de passe
+    //affiche un message d'erreur si le mot de passe est erronné
     socket.on('no credential', function() {
         var password = document.getElementById('pwd');
         password.value = '';
         showCredentialMsg()
     });
 
-    //ajouter le nouveau participants au tableau des connecté
+    //ajoute le joueur qui vient de se connecter.
     socket.on('addNewPlayerToBoard', function(data) {
         addToPlayersBoard(data);
     });
@@ -139,29 +139,62 @@ document.addEventListener('DOMContentLoaded', function() {
     socket.on('leftTheGame', function(data) {
         deletePlayerFromBoard(data.user.user);
     });
-
+    //Mets à jour le tableau des scores
     socket.on('update score', function(data) {
-        updateScore(data.user, data.score);
-    })
+        updateScore(data.user, data.score, data.bestScore);
+    });
 
+    //retour visuel en cas de bonne réponse
+    socket.on('correct answer', function(){
+      $('#correct').fadeIn(1000, function(){
+        $(this).fadeOut(1000);
+      })
+    });
+
+    //retour visuel en cas de mauvaise réponse
+    socket.on('wrong answer', function(){
+      $('#wrong').fadeIn(1000, function(){
+        $(this).fadeOut(1000);
+      })
+    });
+
+    //gestion de demande d'un nouveau tour de jeu
     socket.on('next round', function(data) {
-        socket.emit('Send me a new flag');
+      myCounter = 0;
+      myAnswer = '';
+      socket.emit('Send me a new flag');
     })
 
+    //gestion de demande d'un nouveau drapeau
     socket.on('newFlag', function(data) {
         game(data.country, data.flag, data.capitalsize, data.letters)
     });
 
-    socket.on('update time', function(data) {
-        var timer = document.getElementById('time');
-        var timeLeft = document.createTextNode(' Time Left : ' + data.timeLeft);
-        timer.appendChild(timeLeft)
-    })
+    //les valeurs temporaires de réponses de l'utilisateur sont vidées pour le prochain pays.
+    socket.on('resetValue',function(data){
+      myCounter = data.myCounter;
+      myAnswer = data.myAnswer;
+    });
 
+    //gestion de la mise à jour des meilleurs scores
+    socket.on('update leaderBoard data', function(data){
+      updateLeaderBoard(data);
+    });
+
+    //Affichage du formulaire d'inscription
     socket.on('please register', function(data) {
         var myButton = document.getElementById('send')
-        $('#end').fadeIn()
-        $("#correct").text(data.user + ' Your score is : ' + data.score + '. Your rank is ' + data.rank + ' you may save this score and come back later to improve it');
+        $('#results').show();
+        var results = document.getElementById('comments');
+        var scoreDiv = document.getElementById('scoreDiv');
+        if(scoreDiv === null){
+          var scoreDiv = document.createElement('div');
+          scoreDiv.id = "scoreDiv";
+          scoreDiv.innerHTML = '<em>'+data.user.toUpperCase() +'</em>'+ ' <br>Your score is : ' + data.score + '. <br>Your rank is <em>' + data.rank + ' <br> You may save this score by <em>registering</em> and come back later to improve it';
+          results.appendChild(scoreDiv);
+        }else{
+          scoreDiv.innerHTML = '<em>'+data.user+'</em>'+ ' <br>Your score is : ' + data.score + '. <br>Your rank is ' + data.rank + ' <br> You may save this score by <em>registering</em> and come back later to improve it';
+        }
         var registerName = document.getElementsByName('login');
         registerName[0].value = data.user;
         registerName[0].readOnly = true;
@@ -174,10 +207,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 mail: mail[0].value,
                 passInitial: passInitial[0].value,
                 pass_check: pass_check[0].value
-            })
-        })
+            });
+        });
     })
 
+    //retour visuel si l'inscription s'est bien passée.
+    socket.on('account created', function(data){
+      var myDiv = document.getElementById('register');
+      myDiv.innerHTML="Congratulations <em>"+ data.user + "</em> <br>Your score is recorded !";
+    })
+
+    //retours visuels en cas d'erreur de remplissage du formulaire par l'utilisateur.
     socket.on('form invalid', function(data) {
         var allInputs = document.getElementsByClassName('form-control');
         for (var k of allInputs) {
@@ -200,177 +240,187 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
+
+    //affichage des résultats
     socket.on('show results', function(data) {
         $('#register').hide();
-        var resultsDiv = document.getElementById('correct');
-        var displayScore = document.createElement('div');
-        var displayScoreText = document.createTextNode(data.user + ' vous avez réalisé un score de ' + data.score + '.')
-        var displayRank = document.createElement('div');
-        var displayRankText = document.createTextNode('Ce score vous place au rang ' + data.rank + ' du classement, pour rejouer cliquez sur \"Start Again\"')
-        displayRank.appendChild(displayRankText)
-        displayScore.appendChild(displayScoreText);
-        resultsDiv.appendChild(displayScore);
-        resultsDiv.appendChild(displayRank);
+        $('#scoreDiv').hide();
+        var resultsDiv = document.getElementsByClassName('results');
+        resultsDiv[0].innerHTML = '<em>' + data.message.toUpperCase() + '</em>';
+        var displayScore = document.getElementById('displayScore');
+        if(displayScore === null){
+          displayScore = document.createElement('div');
+          displayScore.id = 'displayScore'
+          displayScore.innerHTML = '<span><em>' + data.user + '</em> <br>You score '+ data.score + ' points.<br> Your ranking on the ladder is '+ data.rank +'. Try Again !</span>'
+          resultsDiv[1].appendChild(displayScore);
+        }else{
+          displayScore.innerHTML = '<span><em>' + data.user + '</em> <br>You score '+ data.score + ' points.<br> Your ranking on the ladder is '+ data.rank +'. Try Again !</span>'
+        };
     });
 
-    var updateScore = function(playerID, score) {
-        var connectedPlayers = document.getElementById('scoreBoard');
-        var rowCount = connectedPlayers.rows.length;
-        var tds = connectedPlayers.getElementsByTagName('td')
-        for (var i = 0; i < tds.length; i++) {
-            if (tds[i].innerHTML == playerID) {
-                tds[i + 1].innerHTML = score;
-            };
-        };
+
+/*******************************************************************
+  FUNCTIONS APPELEES par le client
+********************************************************************/
+
+
+
+  var updateScore = function(playerID, score, bestScore) {
+      var connectedPlayers = document.getElementById('scoreBoard');
+      var rowCount = connectedPlayers.rows.length;
+      var tds = connectedPlayers.getElementsByTagName('td')
+      for (var i = 0; i < tds.length; i++) {
+          if (tds[i].innerHTML === playerID) {
+              tds[i + 1].innerHTML = score;
+              tds[i + 2].innerHTML = bestScore;
+          };
+      };
+  };
+
+  var updateLeaderBoard = function(data){
+    var leaderboard = document.getElementById('leaderBoard');
+    var rowCount = leaderboard.rows.length;
+    for (var i in data){
+      var rank = parseInt(i)+1;
+      leaderboard.rows[rank].cells[1].innerHTML = data[i].user;
+      leaderboard.rows[rank].cells[2].innerHTML = data[i].bestScore;
     };
+  };
 
-    var addToPlayersBoard = function(data) {
-        var connectedPlayers = document.getElementById('scoreBoard');
-        for (var i in data) {
-            var newRowPlayer = connectedPlayers.insertRow(connectedPlayers.rows.length);
-            var newCellUser = newRowPlayer.insertCell(0);
-            var newCellScore = newRowPlayer.insertCell(1);
-            var newCellBestScore = newRowPlayer.insertCell(2);
-            var newTextPlayer = document.createTextNode(data[i].user);
-            var newTextScore = document.createTextNode(data[i].score);
-            var newTextBestScore = document.createTextNode(data[i].bestScore);
-            newCellUser.appendChild(newTextPlayer);
-            newCellScore.appendChild(newTextScore);
-            newCellBestScore.appendChild(newTextBestScore);
-        };
+
+  var addToPlayersBoard = function(data) {
+    var connectedPlayers = document.getElementById('scoreBoard');
+    for (var i in data) {
+      if (data[i].user != undefined){
+        var newRowPlayer = connectedPlayers.insertRow(connectedPlayers.rows.length);
+        var newCellUser = newRowPlayer.insertCell(0);
+        var newCellScore = newRowPlayer.insertCell(1);
+        var newCellBestScore = newRowPlayer.insertCell(2);
+        var newTextPlayer = document.createTextNode(data[i].user);
+        var newTextScore = document.createTextNode(data[i].score);
+        var newTextBestScore = document.createTextNode(data[i].bestScore);
+        newCellUser.appendChild(newTextPlayer);
+        newCellScore.appendChild(newTextScore);
+        newCellBestScore.appendChild(newTextBestScore);
+      };
     };
+  };
 
-    var createLeaderBoard = function(data) {
-        var leaderBoard = document.getElementById('leaderBoard');
-        for (var i in data) {
-            var newRowPlayer = leaderBoard.insertRow(leaderBoard.rows.length);
-            var newCellRank = newRowPlayer.insertCell(0);
-            var newCellUser = newRowPlayer.insertCell(1);
-            var newCellBestScore = newRowPlayer.insertCell(2);
-            var newTextRank = document.createTextNode(parseInt(i) + 1);
-            var newTextUser = document.createTextNode(data[i].user);
-            var newTextBestScore = document.createTextNode(data[i].bestScore);
-            newCellRank.appendChild(newTextRank);
-            newCellUser.appendChild(newTextUser);
-            newCellBestScore.appendChild(newTextBestScore);
-        };
-    };
+  var deletePlayerFromBoard = function(playerId) {
+      var connectedPlayers = document.getElementById('scoreBoard');
+      var rowCount = connectedPlayers.rows.length;
+      var row = connectedPlayers.rows[1]
+      for (var i = rowCount - 1; i > -1; i--) {
+          var row = connectedPlayers.rows[i];
+          var username = row.cells[0].innerText;
+          if (username.indexOf(playerId) != -1) {
+              connectedPlayers.deleteRow(i);
+          };
+      };
+  };
 
-    var deletePlayerFromBoard = function(playerId) {
-        var connectedPlayers = document.getElementById('scoreBoard');
-        var rowCount = connectedPlayers.rows.length;
-        var row = connectedPlayers.rows[1]
-        for (var i = rowCount - 1; i > -1; i--) {
-            var row = connectedPlayers.rows[i];
-            var username = row.cells[0].innerText;
-            if (username.indexOf(playerId) != -1) {
-                connectedPlayers.deleteRow(i);
-            };
-        };
-    };
+  var showPwdinput = function(user) {
+      var currentUser = document.getElementById('userName');
+      var pwd = document.getElementById('pwd');
+      if (pwd == null) {
+          var loginField = document.getElementById('loginfields');
+          var reminderUserText = document.createTextNode('Enter password for : ' + user)
+          var reminderUser = document.createElement('div')
+          reminderUser.appendChild(reminderUserText);
+          var wrongUserText = document.createTextNode('I am not ' + user + ' ! ');
+          var wrongUser = document.createElement('a');
+          var myP = document.createElement('p')
+          wrongUser.appendChild(wrongUserText);
+          wrongUser.href = '/game';
+          var pwdInput = document.createElement('input');
+          pwdInput.id = 'pwd'
+          pwdInput.placeholder = 'indiquez votre mot de passe ici';
+          pwdInput.type = 'password';
+          pwdInput.focus();
+          loginField.appendChild(reminderUser);
+          loginField.appendChild(myP);
+          loginField.appendChild(pwdInput);
+          loginField.appendChild(myP);
+          loginField.appendChild(wrongUser);
+          sendIdAndPassword(user);
+      };
+  };
 
-    var showPwdinput = function(user) {
-        var currentUser = document.getElementById('userName');
-        var pwd = document.getElementById('pwd');
-        if (pwd == null) {
-            var loginField = document.getElementById('loginfields');
-            var reminderUserText = document.createTextNode('Indiquez le mot de passe pour le pseudo : ' + user)
-            var reminderUser = document.createElement('div')
-            reminderUser.appendChild(reminderUserText);
-            var wrongUserText = document.createTextNode('Oops ce n’est pas mon pseudo');
-            var wrongUser = document.createElement('a');
-            var myP = document.createElement('p')
-            wrongUser.appendChild(wrongUserText);
-            wrongUser.href = '/game';
-            var pwdInput = document.createElement('input');
-            pwdInput.id = 'pwd'
-            pwdInput.placeholder = 'indiquez votre mot de passe ici';
-            pwdInput.type = 'password';
-            pwdInput.focus();
-            loginField.appendChild(reminderUser);
-            loginField.appendChild(myP);
-            loginField.appendChild(pwdInput);
-            loginField.appendChild(myP);
-            loginField.appendChild(wrongUser);
-            sendIdAndPassword(user);
-        };
-    };
+  var showCredentialMsg = function() {
+      var errorMessage = document.getElementById('errorMessage');
+      if (errorMessage == null) {
+          var passwordField = document.getElementById('pwd');
+          var errorMessage = document.createElement('div');
+          errorMessage.id = 'errorMessage'
+          errorMessage.setAttribute("style", "color: red; font-family: Arial");
+          var myPText = document.createTextNode('identifiant ou mot passe erroné, réessayer s\'il vous plaît');
+          errorMessage.appendChild(myPText);
+          passwordField.parentNode.appendChild(errorMessage);
+      };
+  };
 
-    var showCredentialMsg = function() {
-        var errorMessage = document.getElementById('errorMessage');
-        if (errorMessage == null) {
-            var passwordField = document.getElementById('pwd');
-            var errorMessage = document.createElement('div');
-            errorMessage.id = 'errorMessage'
-            errorMessage.setAttribute("style", "color: red; font-family: Arial");
-            var myPText = document.createTextNode('identifiant ou mot passe erroné, réessayer s\'il vous plaît');
-            errorMessage.appendChild(myPText);
-            passwordField.parentNode.appendChild(errorMessage);
-        };
-    };
+  var sendIdAndPassword = function(user) {
+      $(".start").click(function() {
+          var username = document.getElementById('userName').value;
+          var pwd = document.getElementById('pwd').value;
+          if (username === user) {
+              socket.emit('check my ids', {
+                  username: username,
+                  pwd: pwd
+              });
+          } else {
+              createPlayer()
+          }
+      });
+  };
 
-    var sendIdAndPassword = function(user) {
-        $(".start").click(function() {
-            var username = document.getElementById('userName').value;
-            var pwd = document.getElementById('pwd').value;
-            if (username === user) {
-                socket.emit('check my ids', {
-                    username: username,
-                    pwd: pwd
-                });
-            } else {
-                createPlayer()
-            }
-        });
-    };
+  var timer = function(limit) {
+          var gameTime = setInterval(function() {
+              if (limit <= 0) {
+                  clearInterval(gameTime);
+                  endGame()
+              } else {
+                  limit--;
+                  $("#time").text("time left : " + (limit));
+              };
+          }, 1000); //set interval
+      } //timer
 
-    var timer = function(limit) {
-            var gameTime = setInterval(function() {
-                if (limit <= 0) {
-                    clearInterval(gameTime);
-                    endGame()
-                } else {
-                    limit--;
-                    $("#time").text("time left : " + (limit));
-                };
-            }, 1000); //set interval
-        } //timer
+  $("#startagain").click(function() {
+      socket.emit('startAgain')
+      $('#end').hide();
+      $('#home').hide();
+      $('#game').show();
+      timer(60);
+      socket.emit('Send me a new flag');
+  });
 
-    $("#startagain").click(function() {
-        socket.emit('startAgain')
-        $('#end').hide();
-        $('#home').hide();
-        $('#game').show();
-        timer(180);
-        socket.emit('Send me a new flag');
-    });
+  var game = function(country, flag, capitalsize, data, time) {
+          $("#butttholder").empty();
+          $("#ppholder").empty();
+          genButtons(16);
+          capitalSize = capitalsize;
+          distributeLetters(data);
+          changeCountry(country, flag);
+          genPs(capitalsize);
+      } //function game
 
-    var game = function(country, flag, capitalsize, data, time) {
-            $("#butttholder").empty();
-            $("#ppholder").empty();
-            genButtons(16);
-            capitalSize = capitalsize;
-            distributeLetters(data);
-            changeCountry(country, flag);
-            genPs(capitalsize);
-        } //function game
+  var distributeLetters = function(letters) {
+      for (var i = 0; i < letters.length; i++) {
+          $('.' + i + '.button').text(letters[i])
+      };
+  };
 
-    var distributeLetters = function(letters) {
-        for (var i = 0; i < letters.length; i++) {
-            $('.' + i + '.button').text(letters[i])
-        };
-    };
+  var endGame = function() {
+      socket.emit('end game', {
+          message: "Time's up !"
+      })
+      $("#game").fadeOut();
+      $("#end").show();
+  };
 
-    function endGame() {
-        socket.emit('end game', {
-            message: 'c\’est la fin'
-        })
-        $("#game").fadeOut();
-        $("#end").show();
-    }; //endgame funciotn
-
-    window.addEventListener('beforeunload', function() {
-        socket.emit('disconnect');
-    });
+  window.addEventListener('beforeunload', function() {
+      socket.emit('disconnect');
+  });
 
 });
