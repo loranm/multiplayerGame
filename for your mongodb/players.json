@@ -1,0 +1,2 @@
+{"_id":{"$oid":"5795de2082a7ac6f7ee70204"},"user":"Loran","mail":"loran@me.com","pwd":"$2a$10$1bDOIRUBMhMqPY3aeZq8MubILXlrMVaDABVamgs76vP3e8R9ubi6y","bestScore":5}
+{"_id":{"$oid":"5796207c9303dc210564ea88"},"user":"Paul","mail":"test@test.fr","pwd":"$2a$10$2v2lpmeCoAOSXRhhe.5AkOJYaMfIzUWJc7CjY/MRu3AyIWq9r208.","bestScore":4}

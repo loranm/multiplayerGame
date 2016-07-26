@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
         corrections = [];
         myCounter = 0;
         myAnswer = '';
-        timer(60);
+        timer(120);
         addToPlayersBoard(data.players);
         socket.emit('Send me a new flag', {
             data
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
       $('#end').hide();
       $('#home').hide();
       $('#game').show();
-      timer(60);
+      timer(120);
       socket.emit('Send me a new flag');
   });
 

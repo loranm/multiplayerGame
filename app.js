@@ -119,11 +119,11 @@ app.io.on('connection', function(socket) { //connexion initiale au websocket
         });
       }else{
         errorsUsername.containErrors = true;
-        errorsUsername.badFormatText = 'Votre pseudo doit contenir uniquement des lettres et des chiffres';
+        errorsUsername.badFormatText = 'Your username must contain only letters and numbers';
       }
     }else{
       errorsUsername.containErrors = true;
-      errorsUsername.sizeText = 'Votre pseudo doit contenir au moins une lettre et un maximum de 15 caractères';
+      errorsUsername.sizeText = 'Your username must contain at least one letter and a maximum of 15 characters';
     }
 
     if(errorsUsername.containErrors){
